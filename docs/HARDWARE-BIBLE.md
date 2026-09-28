@@ -3430,7 +3430,7 @@ covered**: no drawing here shows its boards.
 - **The amp's volume and treble pots do not touch that plate** electrically.
 - **The amp's ±20 V PSU is insulated from that plate** by plastic screws and standoffs.
 - The tube radio's CHASSIS is not part of this: it stays on neutral and is never bonded to Earth (§22).
-- "Almost 0 Ω" is the author's figure; the instrument used is not recorded.
+- "Almost 0 Ω" is the author's figure; the instrument and the time window are not recorded.
 - **An earlier record disagrees:** a safety check on 2026-08-26 recorded "System GND -> earth — OPEN, megohms — pass", and an
   earlier design rule kept every GND off anything earthed. The statement above is later (2026-09-23). This document nowhere
   states that GND is isolated from earth; the only isolation it states is CHASSIS from Earth.

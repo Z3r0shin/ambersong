@@ -4638,7 +4638,7 @@ may want it re-tuned by eye.
 |---|---|---|---|---|---|
 | The tuner's whole travel lies inside one shaft turn | about 2200 counts of 4096 (2197 measured 2026-09-03), for about 20 MHz | `seatTurn()`, src/s3/needle.cpp; `SMP_MAX_DRIFT = 20` (about 0.2 MHz), src/s3/main.cpp (chapter 6) | compiled; checked at run time | The tuner ends measured on this machine; relied on since 2026-09-25 | Measure both tuner ends (`c`/`C`, or "Tuner = low/high end"). If the span is a whole turn or more, the firmware falls back to the nearest turn, which is right only for movement under half a turn. |
 | The tuner's ends repeat | within 300 counts | `SEAT_MARGIN = 300`, src/s3/needle.cpp | compiled | A margin chosen with the rule above, not a repeatability measurement | Keep the measured span plus twice the margin under 4096. |
-| The tuner's ends | measured values in `calLow`/`calHigh`; compiled placeholders 0 / 6023 | `Settings` in src/s3/main.cpp; `calHigh = 6023` also in src/s3/needle.cpp | measured; the compiled pair is only a placeholder | 6023 is left from an older belief that the shaft turned about 1.47 times; the measured span is about 2300 (2197 on 2026-09-03, with `calLow` 1024 and `calHigh` −1173: the count ran down as frequency rose, which is allowed). The placeholder span is wider than a turn, so it also switches off the measured-ends turn choice until real ends are stored | Measure both ends. Nothing reads the placeholder as a measurement (the "measured" bits say which, chapter 7). |
+| The tuner's ends | measured values in `calLow`/`calHigh`; compiled placeholders 0 / 6023 | `Settings` in src/s3/main.cpp; `calHigh = 6023` also in src/s3/needle.cpp | measured; the compiled pair is only a placeholder | 6023 is left from an older belief that the shaft turned about 1.47 times; the measured span is about 2200 (2197 on 2026-09-03, with `calLow` 1024 and `calHigh` −1173: the count ran down as frequency rose, which is allowed). The placeholder span is wider than a turn, so it also switches off the measured-ends turn choice until real ends are stored | Measure both ends. Nothing reads the placeholder as a measurement (the "measured" bits say which, chapter 7). |
 | What the tuner reaches before any calibration | 88.1 MHz at the low end, 107.9 MHz at the high end | `bandLow` 881, `bandHigh` 1079, `Settings` | compiled defaults | In the code since the first commit; with the tuner ends they give the stored straight line used until marks exist (chapter 6) | Calibrate the tuning curve (chapter 6). |
 | The frequencies printed at the two needle stops | 87.9 MHz low, 107.9 MHz high | `dialLow` 879, `dialHigh` 1079, `Settings` | setting | Read off this set's dial glass | Type in what your glass prints at each end. |
 
@@ -6179,7 +6179,7 @@ is actually in the machine rather than what it last asked for.
 - **"Do not write a mirror we have never read."** Until the first `MSG_CFG` arrives the mirror is
   all zeros. `settingSet()` refuses every A32 row while `haveCfg` is false; a push in that window
   would have sent volume 0, gain 0, every LED off and "not connectable", and the A32 would have
-  saved them. This guard exists since the first commit (v.1.0). The portal answers such an edit
+  saved them. This guard exists since the first commit (2026-09-01). The portal answers such an edit
   with HTTP 409, "the audio board is not answering - its settings cannot be changed now".
 - **A silent A32 is forgotten.** When the link, having handshaken, stops hearing the A32
   (`peerHello` and not `gLink.peerAlive()`, in `loop()`), the S3 clears `haveCfg` along with its
@@ -6819,11 +6819,11 @@ These were dead ends on this machine. They are not necessarily dead ends elsewhe
   Dropped for `offsetof` cuts.
 - **A stored "dirty" flag**, cleared before and then after the write. Here, changes that landed
   during a write were marked saved and lost. Dropped for the two counts (2026-09-24, 2026-09-25).
-- **A save that returned nothing** and printed "saved" regardless. Dropped (v.1.0).
+- **A save that returned nothing** and printed "saved" regardless. Dropped (2026-09-01).
 - **Purging corrupt soft limits inside `applySettings()`.** It fired mid-edit and overwrote what
   had just been typed. Moved to boot.
 - **Soft-limit ranges -3000..0 and 0..3000.** They assumed a centred index; clamping instead of
-  refusing made the high limit silently unsettable while it was negative (v.1.0). Dropped for
+  refusing made the high limit silently unsettable while it was negative (2026-09-02). Dropped for
   one wide range and validation by `setGeometry()`.
 - **Two copies of the bounding rule.** The second guarded only the file. Dropped for
   `settingBound()`.
@@ -6836,14 +6836,14 @@ These were dead ends on this machine. They are not necessarily dead ends elsewhe
   learned state that nobody sets; it was taken out of the portal and the file and kept on the
   console.
 - **The `autoConnect` row** ("Chase the phone (not advised)"). Stored, shown, exported and
-  imported, and read by nothing. Removed as a row (v.1.0.2); the struct field stays.
+  imported, and read by nothing. Removed as a row (in v.1.0.2); the struct field stays.
 - **The console keys `,` and `.`** (up-leg top speed -100/+100). `.` had no ceiling and bypassed the
-  row's bounds; removed (v.1.0.2), the portal row does the job inside its range.
+  row's bounds; removed (in v.1.0.2), the portal row does the job inside its range.
 - **The mirror counted as known for the whole boot** once the A32 had answered. Here a silent A32
   took portal edits into the mirror only, and a download wrote the stale copy. Dropped for
-  forgetting it on silence (v.1.0.2).
+  forgetting it on silence (in v.1.0.2).
 - **The A32 clearing its dirty flag before writing and ignoring the results.** A failed write said
-  "saved". Dropped for the S3's rule (v.1.0.2).
+  "saved". Dropped for the S3's rule (in v.1.0.2).
 - **Saving during an S3 trial**, with a documented trap for whoever bumps `SETTINGS_VERSION`. A
   rollback after such a save left the previous image locked on defaults. Dropped for holding every
   write until the image is confirmed (v.1.0.1).
@@ -6851,15 +6851,15 @@ These were dead ends on this machine. They are not necessarily dead ends elsewhe
   that changes an A32 struct. A rollback after such a save would have left the previous image on
   defaults for that struct. Dropped for the same hold as the S3's (v.1.0.4).
 - **Zeroing the hand offset on a hand mark, a drop, a clear or a requested sample.** It erased the
-  user's correction unasked. Dropped for the reset button (v.1.0.2).
+  user's correction unasked. Dropped for the reset button (in v.1.0.2).
 - **Wiping the marks on seeing `tuneUsed`, and applying `tuneOffset10` at once.** A truncated file
   erased the calibration, or slid an offset onto the wrong curve.
 - **`String::toInt()` for hand-parsed keys.** It answers 0 for garbage, and 0 is the destructive
   value for `tuneUsed`, `spurUsed` and `tunerEndsSet`.
 - **One bit for both tuner ends.** One measured end declared both measured, and the fit then ran
   over a domain far wider than the shaft.
-- **Exporting zeros for a silent A32.** Dropped for `n/a` (v.1.0).
-- **Lifting the downgrade lock on any upload.** Dropped for the complete-file rule (v.1.0).
+- **Exporting zeros for a silent A32.** Dropped for `n/a` (2026-09-25).
+- **Lifting the downgrade lock on any upload.** Dropped for the complete-file rule (2026-09-24).
 - **Saving the A32's mute.** The set booted silent on 2026-08-28.
 - **Refusals inside the success message.** Painted green. Dropped for the `warn` field.
 
@@ -7332,7 +7332,7 @@ the router", "I found it and it refuses me", and "there are three and I picked t
 cancel any pending join, set `gForced`, stamp `forcedAt` **and `lastTry`**, `startAp()`. The
 retry loop then leaves the access point alone for `FORCE_HOLD_MS` = 10 minutes, and longer
 while somebody is connected (the retry skips while a client is on it, and looks again every
-2 minutes). Then it goes home by itself. Stamping `lastTry` is the fix of 2026-09-24 (v.1.0):
+2 minutes). Then it goes home by itself. Stamping `lastTry` is the fix of 2026-09-24:
 without it the very next loop pass saw a retry overdue since boot, and the forced access point
 lived about one loop tick.
 
@@ -7367,7 +7367,7 @@ off, starts mDNS and SNTP, and the access point goes down. The rung that associa
   ample for a router a few metres away. After the first success the walk normally never happens
   again.
 - **The top rung is 15 dBm, and the clamp stops there.** This ceiling is a firmware choice, a
-  value this firmware holds. It was measured here: on 2026-09-24 (v.1.0) the forced access
+  value this firmware holds. It was measured here: on 2026-09-24 the forced access
   point at 20.0 dBm was seen by no device for 90 s; at 15.0 dBm two devices saw it within 22 s,
   and a PC joined it and signed into the portal. The ceiling is held in the firmware because the
   fault is believed to be a firmware problem.
@@ -7379,7 +7379,7 @@ off, starts mDNS and SNTP, and the access point goes down. The rung that associa
   at boot. `loop()` in `src/s3/main.cpp` copies `Net::txPower()` back into `cfg` on every pass and
   marks the settings for saving, so the learned rung survives a power cut and the network code
   wins while it is hunting.
-- **Console keys only.** It is not a portal setting and, since v.1.0.2 (v.1.0.2), it is not in the
+- **Console keys only.** It is not a portal setting and, since v.1.0.2, it is not in the
   settings file either. `settingsToText()` no longer writes a `wifiTxQ` line, and
   `settingsFromText()` accepts an old file's `wifiTxQ=` line and ignores it, so old backups still
   upload cleanly. Console key `B` steps it by hand (8.2.9), and the console dump `D` prints it
@@ -7394,7 +7394,7 @@ SNTP (Simple Network Time Protocol) sets the S3's system clock from a time serve
   The timezone is a POSIX TZ string, so daylight saving is the C library's job.
 - **"Fresh" means SNTP's own sync callback fired within the last 4 hours** (`NTP_FRESH_MS`: the
   core re-syncs every 3 hours, plus an hour's grace). Before 2026-09-24 "fresh" meant "the clock
-  reads later than 2020", which stayed true forever after the first sync (v.1.0).
+  reads later than 2020", which stayed true forever after the first sync (2026-09-24).
 - **NTP corrects the clock; the clock stays the authority.** While NTP is fresh and the link to
   the A32 is up, `loop()` in `src/s3/main.cpp` sends the time to the A32 once an hour
   (`MSG_SET_TIME`), and the A32 writes it into its battery-backed real-time clock. With no
@@ -7402,7 +7402,7 @@ SNTP (Simple Network Time Protocol) sets the S3's system clock from a time serve
   (Bible §5, §22), and the module has a backup battery (Bible §22).
 - The timezone is applied once in `begin()` and again only by `setNtp()` (the Network card). One
   exception: the console `W` prompt uses a fixed Eastern-time rule (8.2.9 and 8.7).
-- **The battery clock's health reaches the portal** (v.1.0.2). The state field `rtc` is 0 when the
+- **The battery clock's health reaches the portal** (in v.1.0.2). The state field `rtc` is 0 when the
   clock is fine (or has not been asked yet), 1 when it answered with no valid time, and 2 when it
   does not answer. The page then shows a red pill, "BATTERY CLOCK LOST ITS TIME - check its
   battery" or "BATTERY CLOCK NOT ANSWERING". Chapter 9 (9.2.14) explains how the S3 decides each.
@@ -7609,7 +7609,7 @@ and six polls measured afterwards all answered 200 in 0.35–3.1 s. So:
 - **Header pills**: link to the A32, needle homed, NTP fresh, the clock, the network (name and
   signal, or "access point"), the address, and red warnings when relevant (needle off, fault,
   re-indexing or hunting; audio board sends no state; settings locked; updating). Since v.1.0.2
-  (v.1.0.2) three more: "BATTERY CLOCK LOST ITS TIME - check its battery" (state `rtc` = 1),
+  three more: "BATTERY CLOCK LOST ITS TIME - check its battery" (state `rtc` = 1),
   "BATTERY CLOCK NOT ANSWERING" (`rtc` = 2), and "BOARDS RUN DIFFERENT PROTOCOL VERSIONS - flash
   both" (state `linkver`, the count of link frames dropped for another protocol version, is not
   zero while the boards have no handshake; chapter 9).
@@ -7855,11 +7855,11 @@ before the repository; `src/s3/portal.h`.
 Why: the firmware tree became a git repository meant to be published, so the author's real
 credentials could no longer be compiled in. Rejected: a "must change" field in `User` (it would
 change the NVS record size and discard every stored account); carrying the gate flag in the schema
-(cached; it would never clear). When and evidence: 2026-09-03, a pre-v.1 item (v.1.0).
+(cached; it would never clear). When and evidence: 2026-09-03, a pre-v.1 item.
 
 **Decision.** One choke point, `requireLogin()`, for sign-in and the placeholder gate; the two
 upload handlers are the only exceptions and repeat the check.
-Why: one rule in one place cannot be forgotten in the fifteenth handler. When: 2026-09-03 (v.1.0).
+Why: one rule in one place cannot be forgotten in the fifteenth handler. When: 2026-09-03.
 
 **Decision.** The page is gzipped at build time, given an ETag and served from flash; no filesystem.
 Why: page load time was the page's size. Rejected: compression at run time (no deflate in ROM);
@@ -7891,18 +7891,18 @@ matter on a set powered from the mains (Bible §10). When: before the repository
 **Decision.** The radio must never become unreachable: a rescue access point plus a background
 retry, and the access point reachable from the portal and fixed rather than recorded.
 Why: once the cabinet is shut, the cable is gone. When and evidence: the access point and retry
-before the repository; the portal button and the driver checks 2026-09-12 (v.1.0). The rescue
+before the repository; the portal button and the driver checks 2026-09-12. The rescue
 access point was made a required item before v.1: a fault in it is fixed, not recorded as an
 observation.
 
 **Decision.** Never take the WiFi driver through `WIFI_MODE_NULL` while the AP or station must
 survive; believe the driver, not `softAP()`'s return.
 Why: arduino-esp32 issue #7232 and the library's identical-configuration shortcut. When and
-evidence: `startAp()` 2026-09-12 (v.1.0); the retry path 2026-09-25 (v.1.0).
+evidence: `startAp()` 2026-09-12; the retry path 2026-09-25.
 
 **Decision.** A forced access point holds 10 minutes, then goes home by itself.
 Why: an unbounded hold, reachable from the portal, would strand the machine off the house network
-until a power cycle. When and evidence: 2026-09-24 (v.1.0).
+until a power cycle. When and evidence: 2026-09-24.
 
 **Decision.** Take a lone access point down for the length of a join attempt; keep it if someone
 is on it.
@@ -7911,11 +7911,11 @@ channel. On 2026-09-05 every retry for half an hour failed with authentication e
 timeout reasons, never "no access point found". Rejected: the "channel lock" explanation, which
 was checked against the ESP-IDF 4.4.7 documentation and is wrong (in AP+STA the station's channel
 wins, and the access point moves to it, announcing a channel switch). When:
-2026-09-07 (v.1.0).
+2026-09-07.
 
 **Decision.** Hold the retry while anyone is connected to the access point.
 Why: otherwise the settings form dies every two minutes in exactly the case the access point
-exists for. When: 2026-09-01 (v.1.0).
+exists for. When: 2026-09-01.
 
 **Decision.** Transmit power is learned on an ascending, wrapping ladder that starts at the bottom
 and tops out at 15 dBm. It is learned state: not a portal setting and not in the settings file;
@@ -7923,13 +7923,13 @@ only the console (`B`, `D`) reaches it.
 Why: a join can fail from too much power or too little and the firmware cannot tell which. A
 settings row once wrote 2.000 where the dump wrote 8, quadrupling power on a paste. At 20 dBm this
 board radiated nothing on 2026-09-24, and at 15 dBm it radiated reliably; the 15 dBm ceiling is a
-firmware choice. When and evidence: 2026-09-07 (v.1.0), 2026-09-24 (v.1.0); the settings-file
-line removed in v.1.0.2 (v.1.0.2).
+firmware choice. When and evidence: 2026-09-07, 2026-09-24; the settings-file
+line removed in v.1.0.2.
 
 **Decision.** HTTP handlers only request WiFi changes; `Net::loop()` acts after 500 ms (3 s for a
 network change).
 Why: avoid the cross-core race, and let the answer out first. Rejected: acting inside the handler
-with an immediate "verified" answer (v.1.0). When: 2026-09-24.
+with an immediate "verified" answer (2026-09-12). When: 2026-09-24.
 
 **Decision.** NTP is fresh only within 4 h of an SNTP sync; NTP corrects the real-time clock
 hourly and the clock is the authority without a network.
@@ -7964,25 +7964,25 @@ Why: "change something, press Reboot" lost the change. When: 2026-09-25.
 
 **Decision.** The settings file download is refused (409) while settings are locked.
 Why: the RAM then holds defaults, and a round trip would overwrite the real calibration. When:
-2026-09-25 (v.1.0).
+2026-09-25.
 
 **Decision.** One console object for two audiences, `Con`, not a redefined `Serial`.
 Why: `Serial` is a core macro, and redefining it depends on include order. When: 2026-09-23
-(v.1.0).
+.
 
 **Decision.** One key per web-console send, except while a prompt reads a line.
-Why: typed words ran as strings of commands. When: 2026-09-24 (v.1.0).
+Why: typed words ran as strings of commands. When: 2026-09-24.
 
 **Decision.** A prompt discards the unread rest of its line (`drainLine()`); the `y` buffer fits the
 longest legal pair.
-Why: an over-long line's tail ran as one-key commands. When: 2026-09-25 (v.1.0).
+Why: an over-long line's tail ran as one-key commands. When: 2026-09-25.
 
 **Decision.** The live index monitor `l` works from the web console.
-When: 2026-09-25 (v.1.0).
+When: 2026-09-25.
 
 **Decision.** The `W` clock prompt keeps its fixed Eastern-time rule, with a note for builders.
 Why: the rule belongs to this build's location; anyone building a similar device should put in
-their own. It is noted for builders (8.7), not fixed. When: 2026-09-25 (v.1.0).
+their own. It is noted for builders (8.7), not fixed. When: 2026-09-25.
 
 **Decision.** The `y` prompt may block `loop()` for up to 60 s, mute the A32 meanwhile, and echo the
 password.
@@ -8089,14 +8089,14 @@ These are what failed **here**, on this machine, with this toolchain. They may w
 - **A page that drew before it had any state**, and **a boot that gave up silently** when its
   first fetch timed out. Here the first left the page blank for ever, and the second showed
   nothing with no retry (8.2.8).
-- **A separate console poll.** Replaced by the log riding `/api/state` (v.1.0).
+- **A separate console poll.** Replaced by the log riding `/api/state` (2026-09-23).
 - **A 750 ms silent-socket reaper.** Here, once power save came back and round trips rose past a
   second, it killed real requests and made the portal unreachable. Now 3 s, off during uploads.
 - **`WiFi.setSleep(false)` before `WiFi.begin()`.** Ignored here, because connecting re-applies
   power save. Now after association, and every 5 s.
 - **An uncompressed page, and a 302 for the favicon** (the browser downloaded the page twice).
 - **`src/s3/page.h`**, a stale, unreferenced second copy of the portal page, deleted on
-  2026-09-03 (v.1.0).
+  2026-09-03.
 - **A stack counter named in words** (`stackFreeWords()`) that reported bytes, so it over-read
   the portal task's headroom by four (found 2026-08-31). Now `stackFreeBytes()`.
 - **The first `startAp()`**: it ignored `softAP()`'s return, called it in the same breath as the
@@ -8107,23 +8107,23 @@ These are what failed **here**, on this machine, with this toolchain. They may w
   then broadcast nothing.
 - **Believing `softAP()`'s return and printing "is up".** For months here, nothing was on the air.
 - **`net.forceAp` carried out inside the HTTP handler with an immediate verified answer**
-  (v.1.0). Here it raced `Net::loop()` and tore down the link the answer needed (v.1.0).
-- **A forced access point that did not stamp `lastTry`.** It lived one loop tick (v.1.0).
+  (2026-09-12). Here it raced `Net::loop()` and tore down the link the answer needed (2026-09-24).
+- **A forced access point that did not stamp `lastTry`.** It lived one loop tick (2026-09-24).
 - **Transmit power as a typed setting, and 20 dBm as the top rung** (2026-09-07, 2026-09-24). Then
-  **transmit power as a settings-file line** (`wifiTxQ=`): removed in v.1.0.2 (v.1.0.2); an old
+  **transmit power as a settings-file line** (`wifiTxQ=`): removed in v.1.0.2; an old
   file's line is ignored on upload.
 - **Console keys `,` and `.`** (the needle's up-leg top speed −100 / +100 half-steps/s). Here `.`
-  had no ceiling; removed in v.1.0.2 (v.1.0.2). The portal's `upVmax` row does the job inside its
+  had no ceiling; removed in v.1.0.2. The portal's `upVmax` row does the job inside its
   bounds (chapter 5).
 - **A drop-sample prompt that asked for a frequency.** The portal's "Drop one sample" button reused
   the station prompt; since v.1.0.2 it asks "Which sample slot to drop (0-11)?".
-- **"NTP fresh" meaning "the clock is past 2020"** (v.1.0).
+- **"NTP fresh" meaning "the clock is past 2020"** (2026-09-24).
 - **The author's real credentials compiled into the image** (until 2026-09-03).
-- **Multi-character web-console sends** (v.1.0).
-- **A second help list printed at boot**, which drifted from the dispatcher (v.1.0).
+- **Multi-character web-console sends** (2026-09-24).
+- **A second help list printed at boot**, which drifted from the dispatcher (2026-09-23).
 - **`copySince()` returning the newest bytes**: it dropped the head of any burst over 4 KB
-  (v.1.0).
-- **`String::toFloat()` for request numbers**: it read "107,3" as 107 and accepted "nan" (v.1.0).
+  (2026-09-24).
+- **`String::toFloat()` for request numbers**: it read "107,3" as 107 and accepted "nan" (2026-09-24).
 - **The `sys.sddly` portal action** (2026-09-10 to 09-11): here it sent the radio to full volume.
   Do not restore it (2026-09-12 and later).
 - **The "channel lock" theory** of the AP+STA join failure: checked and wrong.
@@ -8158,7 +8158,7 @@ These are what failed **here**, on this machine, with this toolchain. They may w
   (nothing is saved on trial, 8.2.10).
 - The rescue access point transmits at the learned station rung. With no network configured the
   ladder never moves, so a blank board's access point runs at 2.0 dBm. On this machine on
-  2026-09-24 an access point at 2.0 dBm "was visible at 44 % but could not be joined" (v.1.0).
+  2026-09-24 an access point at 2.0 dBm "was visible at 44 % but could not be joined" (2026-09-24).
   On another builder's board it may be fine at close range; untested (§12.3.14).
 - While retrying from the access point, the access point disappears for up to 20 s every 2
   minutes (if nobody is connected to it). Someone trying to join at that moment must wait.
@@ -8180,7 +8180,7 @@ These are what failed **here**, on this machine, with this toolchain. They may w
 
 **Never exercised on the real radio**
 - The rescue access point coming back after a **failed** join on the current retry path
-  (v.1.0). The 2026-09-25 test exercised force, hold and return only; that day radiation was
+  (2026-09-25). The 2026-09-25 test exercised force, hold and return only; that day radiation was
   shown from the S3's side (driver confirmed, probe requests heard at −68 to −87 dBm), and the
   S3 came home by itself after 10.4 min. The 2026-09-24 test, on the older path, was the one where
   a PC joined the access point and signed in (§12.3.16).
@@ -8345,7 +8345,7 @@ State fields added by this chapter's code (`buildState()` in `src/s3/portal.cpp`
 on the house network), `net.ssid` (the house network's name, or `Ambersong`), `net.ip`,
 `net.rssi` (0 on the access point), `net.ntp` (1 = fresh), `sess` (active sessions), `ota` (1 =
 upload in progress). `mustchg` comes from `portalStateJson()` in `src/s3/main.cpp`, as do two
-fields added in v.1.0.2 (v.1.0.2) that drive header pills: `rtc` (the battery clock's health: 0
+fields added in v.1.0.2 that drive header pills: `rtc` (the battery clock's health: 0
 fine or not asked yet, 1 answered with no valid time, 2 not answering; 8.2.5, 9.2.14) and `linkver`
 (the S3's count of link frames dropped for another protocol version; 9.2.7). The other state
 fields belong to other chapters.
@@ -8445,7 +8445,7 @@ Keys owned by other chapters are listed for completeness.
 | `D` | Dump all settings as text, including the IF (`ifOffset`, since v.1.0.2) and the learned transmit power (`wifiTxQ`, which the settings file no longer carries) | 7 |
 | `Z` | Zero the jitter and display slot-error counters | 5, 4 |
 
-Removed in v.1.0.2 (v.1.0.2): `,` and `.` (the up-leg top speed; `.` had no ceiling). They now
+Removed in v.1.0.2: `,` and `.` (the up-leg top speed; `.` had no ceiling). They now
 fall under "any key not listed is ignored".
 
 ## 8.12 Reference: page controls and the calls they make (`data/portal.html`)
@@ -8569,7 +8569,7 @@ keys (chapter 10). The Arduino core feeds the watchdog once per pass of `loop()`
 
 **The A32's settings save.** `settingsFlush()` in `src/a32/main.cpp` writes the audio settings, the
 Bluetooth settings and the three knob calibration points to NVS namespace `amb`, 2 s after the last
-change (the debounce). Since v.1.0.2 (v.1.0.2) only a write that reached flash counts as saved: every
+change (the debounce). Since v.1.0.2 only a write that reached flash counts as saved: every
 `put` must report the full length written. If any part fails, the settings stay marked unsaved, the
 debounce starts again (so the write is retried 2 s later), and the A32 says so on its own console and
 to the S3, which prints `[A32] settings NOT saved - the flash write failed; retrying`. Before, the
@@ -8627,7 +8627,7 @@ and its source. A rollback proven on 2026-09-25 read, in full: `boot: commit <ha
 6, ... image valid, watchdog on - an earlier update was ROLLED BACK`, where 6 is the task watchdog.
 The report has not changed since v.1.0. After the v.1.0.2 update the same evening it read `boot:
 commit <hash> ... image ON TRIAL (rollback armed) ...`, followed a minute later by `[A32] image
-confirmed (a minute of running with the S3)`; v.1.0.3 (v.1.0.3) and v.1.0.4 (v.1.0.4) went through
+confirmed (a minute of running with the S3)`; v.1.0.3 and v.1.0.4 went through
 the same cycle on 2026-09-26, and v.1.0.4 added, at its confirmation, `[A32] settings changed during
 the trial are now saved` (9.2.3).
 
@@ -8740,7 +8740,7 @@ Three details matter:
   one `write()`, and the core's UART write holds a lock for the whole call.
 
 The S3 publishes `linkrx`, `linktx`, `linkcrc`, `hello` (handshake done), `astate` (a parsed state
-frame is in hand) and, since v.1.0.2 (v.1.0.2), `linkver` (its `badVer()` count) in its status for
+frame is in hand) and, since v.1.0.2, `linkver` (its `badVer()` count) in its status for
 the portal. Its console `s` prints the same on the link line. A healthy pair reads, for example,
 `link : alive  rx 489  crc 0  wrong-version 0`; during a protocol mismatch the line reads (the count
 here is invented):
@@ -8907,7 +8907,7 @@ wrong-version counter, on the console and as a portal pill (9.2.7).
 **The settings mirror.** The A32 owns and saves its own settings; the S3 keeps a copy so the portal
 can show what is really in the machine. The copy is refreshed at every handshake, because a
 restarted A32 comes back with the values from its own flash. `haveCfg` means "the A32 has sent its
-settings since it last went silent": the CFG frame sets it, and since v.1.0.2 (v.1.0.2) the S3
+settings since it last went silent": the CFG frame sets it, and since v.1.0.2 the S3
 clears it, with `peerHello`, when nothing valid has come from the A32 for 2 s (the other re-handshake
 causes in 9.2.10 keep it; the settings are read again at the handshake anyway). While it is false:
 
@@ -9014,7 +9014,7 @@ The pieces, and why each is there:
   (2026-09-25): the A32 commits the image *before* it answers, so a lost answer can hide a good
   update. Hence "check its version once it reconnects", and the re-handshake that shows it.
 - **The END wait cannot wrap.** It reads `millis()` once per pass, because two readings could straddle
-  the 4 s limit and the unsigned subtraction would wrap to about 49 days (v.1.0).
+  the 4 s limit and the unsigned subtraction would wrap to about 49 days (2026-09-25).
 - **The error reaches the page.** The S3 keeps the reason in `otaErr` (96 characters), including the
   A32's `Update` error code: 1 write, 2 erase, 3 read, 4 space, 5 size, 6 stream, 7 MD5, 8 magic byte,
   9 activate, 10 no partition, 11 bad argument, 12 abort. `a32OtaSetError()` lets the portal record a
@@ -9118,10 +9118,10 @@ before `image confirmed (...)`.)
   On 2026-09-26, 11:34 to 11:36, the v.1.0.4 image (v.1.0.4) showed the settings hold: a Bluetooth
   lamp level changed from the portal during the trial was written only at confirmation (9.2.3).
 
-The S3 has had the same treatment since v.1.0 (v.1.0): trial and rollback of its own updates, no
+The S3 has had the same treatment since v.1.0: trial and rollback of its own updates, no
 S3 update while on trial, a degraded run instead of a halt on a failed self-test, and a 15 s task
 watchdog; chapter 4 describes it. It has also held its settings during its trial since v.1.0.1
-(v.1.0.1); the A32 has done the same since v.1.0.4.
+; the A32 has done the same since v.1.0.4.
 
 ### 9.2.14 The clock path
 
@@ -9158,7 +9158,7 @@ re-anchor from this one reading.
 Why OSF matters: a DS3231 whose oscillator stopped keeps counting from wherever it was, so after a
 power loss it reports a date that is plausible and wrong. Plausibility cannot catch that; OSF can. OSF
 is sticky, and that is the point: "a clock that stopped and was never set since IS wrong". Until
-2026-09-24 validity was plausibility alone and OSF was carried but never read (v.1.0).
+2026-09-24 validity was plausibility alone and OSF was carried but never read (2026-09-24).
 
 **Writing** (`Rtc::write()`): the time in 24-hour form with the weekday, then a read-modify-write of the
 status register that **clears OSF**. That clear is what makes the time trustworthy again.
@@ -9180,7 +9180,7 @@ clock just stops being corrected. It is re-anchored:
 The RTC is the authority whenever the network is absent. The first `MSG_SET_TIME`, from NTP or by
 hand, clears OSF, and from then on the chip reports `valid` again.
 
-**The battery clock's health, on the portal** (v.1.0.2). The S3 keeps `gRtcBad` in
+**The battery clock's health, on the portal** (in v.1.0.2). The S3 keeps `gRtcBad` in
 `src/s3/main.cpp` and publishes it as the state field `rtc`:
 
 | `rtc` | Meaning | Set when | Portal pill |
@@ -9298,7 +9298,7 @@ handler has `default: break`, so a peer ignores an id it does not know.
 | 0x46 | `MSG_CLK_PAIR` | S3 to A32 | uint8[2]: MCLK drive, then BCK/LRCK drive, each 2..3 | portal `sys.clkpair` | drives the two clock groups separately |
 
 The diagnostics (0x1B, 0x1D, 0x1E, 0x40 to 0x46) belong to the pop investigation (chapter 10).
-Several were added on 2026-09-12 and `MSG_CLK_PAIR` on 2026-09-22 (v.1.0).
+Several were added on 2026-09-12 and `MSG_CLK_PAIR` on 2026-09-22.
 
 ### 9.3.3 Payload structures
 
@@ -9551,11 +9551,11 @@ necessarily everywhere.
 - **0xA5 0xA5 as the start marker.** Set aside for 0xA5 0x5A when the protocol was written.
 - **A table-driven CRC.** Not used: the bitwise CRC is fast enough here, and the table would take cache
   the display interrupt wants.
-- **Halting the A32 on a failed self-test.** Retired 2026-09-24 (v.1.0): it made an updated image that
+- **Halting the A32 on a failed self-test.** Retired 2026-09-24: it made an updated image that
   failed unreachable.
 - **The self-test as the only guard against oversized payloads.** Replaced by compile-time checks on
-  2026-09-24 (v.1.0).
-- **`MSG_ADC_CLOCK` (0x1C).** Cut the ADC's clock pin to mute it. Retired 2026-09-01 (v.1.0): once the
+  2026-09-24.
+- **`MSG_ADC_CLOCK` (0x1C).** Cut the ADC's clock pin to mute it. Retired 2026-09-01: once the
   DAC took its system clock from the same pin here, cutting it was a DAC clock error, not a mute.
 - **`MSG_SD_DELAY` (0x41).** A remote write to the I2S output delay register. Added 2026-09-10, retired
   2026-09-11: here it sent the radio to full volume (of its four positions only 0 played correctly), and
@@ -9576,29 +9576,29 @@ necessarily everywhere.
   frames it dropped (`badVer`) but nothing showed the count, so a half-updated pair read "SILENT, rx 0",
   exactly like a broken cable. Now shown on the console and the portal (9.2.7).
 - **The A32 plays on when the S3 is silent** (link liveness only displayed, never acted on). Replaced
-  2026-09-01 by the awake rule (v.1.0), at the author's request.
-- **Waking on the S3's last known amp state.** Replaced 2026-09-25 (v.1.0).
+  2026-09-01 by the awake rule, at the author's request.
+- **Waking on the S3's last known amp state.** Replaced 2026-09-25.
 - **A 250 ms wait before the first flash write.** Here it left no margin while the output chain was
-  16 buffers, and risked a click; 400 ms since 2026-09-12 (v.1.0), kept when the chain went back
+  16 buffers, and risked a click; 400 ms since 2026-09-12, kept when the chain went back
   to 8.
 - **A 5 s wait for the answer to BEGIN.** Failed consistently here on 2026-09-01; 20 s since.
 - **Ignoring the answer to END.** Here a lost END was reported as "image sent" while the A32 kept its old
-  firmware. Replaced 2026-09-24 (v.1.0); the "it keeps its old firmware" message was then replaced by
-  the honest one on 2026-09-25 (v.1.0).
+  firmware. Replaced 2026-09-24; the "it keeps its old firmware" message was then replaced by
+  the honest one on 2026-09-25.
 - **A 48-character error buffer on the S3.** Cut the messages short here; 96 since 2026-09-25.
 - **Restoring "unmuted" after a failed update.** Here it unmuted a set the user had muted; the user's
   own mute is restored since 2026-09-24.
 - **The core's default of trusting every updated image.** Here an image that crashed at boot needed USB.
-  Overridden 2026-09-25 (v.1.0).
+  Overridden 2026-09-25.
 - **Confirming a trial image at the first handshake.** Lasted one afternoon (17:07, to
    18:31): the handshake came before Bluetooth and playback, so a crash there was already "good".
-- **An unconditional 5-minute confirmation.** Restricted the same evening (v.1.0) to "nothing heard".
+- **An unconditional 5-minute confirmation.** Restricted the same evening (2026-09-25) to "nothing heard".
 - **Bringing the link up before Bluetooth.** Dropped as useless here (9.4).
 - **RTC validity by plausibility alone** (2026-08-31). Here a DS3231 that had lost power reported a
-  plausible wrong date and the S3 adopted it. Reversed 2026-09-24 (v.1.0).
+  plausible wrong date and the S3 adopted it. Reversed 2026-09-24.
 - **Reading the Bluetooth transmit power from the 4 Hz state builder.** Coincided here with an A32
   restart the moment Bluetooth started page-scanning (2026-09-11). The value is now read back once, when
-  it is set (v.1.0).
+  it is set (2026-09-12).
 
 ## 9.7 Limits and firmware notes
 
@@ -9660,7 +9660,7 @@ v.1.0.5 and the A32 at v.1.0.4.
   four A32 update failures of 2026-09-01, since the relay runs on that task. It is classed as a
   quality item, not a blocker; the fix (scheduling changes) has not been started. Keeping the needle at
   rest during an A32 upload avoids the contention (§12.3.3).
-- **The S3 no longer halts on its own failed protocol self-test** (v.1.0): it runs on, and its image
+- **The S3 no longer halts on its own failed protocol self-test** (2026-09-25): it runs on, and its image
   is never confirmed (chapter 4).
 
 ## 9.8 Changing this area
