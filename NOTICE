@@ -1,24 +1,26 @@
-Ambersong — notices
+Ambersong: notices
 
-Names
+Name
 
-  "Ambrelievre" (also written "Ambrelièvre") is the name the author gave to his own unit of this
-  build. The licences in LICENSE cover the files of this project, not that name. It may be used to
-  refer to this project, but not as the name of a product, a kit or a service, and not for any
-  commercial purpose. Derivative builds are welcome under the project's licences, under a name of
-  their own.
-
-  "Ambersong" is the name of this public project. It may be used to refer to it; a derivative work
-  should make clear that it is not the original.
+  "Ambersong" is the name of this project. It may be used to refer to it. A derivative work should
+  make clear that it is not the original.
 
 Credits
 
+  The author's parents and friends, for their input on the design.
+
   The clock display follows the LEDitron idea by Axiris: seven-segment digits built from LED
-  filaments (Elektor Labs, 2015; Elektor magazine, September 2016). Only the idea and the name are
-  borrowed; none of Axiris's files are used or included.
+  filaments. Only the idea and the name are borrowed; none of Axiris's files are used or included.
+    https://www.elektormagazine.com/labs/leditron-display-150448
+    https://www.elektormagazine.com/labs/160205-clock-scoreboardtimer-with-leditron-modules
 
   Bluetooth audio uses the ESP32-A2DP library by Phil Schatzmann (Apache License 2.0), fetched at
   build time.
+    https://github.com/pschatzmann/ESP32-A2DP
+
+  Claude (Anthropic) and ChatGPT (OpenAI) were used throughout the project.
+    https://www.anthropic.com/claude
+    https://chatgpt.com
 
   LLOYDS and TM-838 are the names of the original radio and its maker, used here only to identify
   the set this build is based on.
