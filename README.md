@@ -13,7 +13,7 @@ static, it was warm static, kind of like warm wind at night. I wasn't ready to t
 
 So, I started restoring it. A couple of the old components had to be replaced. The tubes, though, 
 still had enough life in them for a lot more years of use. If the tubes could last that long, I could
-make something durable out if it, an heirloom.
+make something durable out of it, an heirloom.
 
 I wanted it to look warm and cozy, mostly as an excuse and a challenge, to show off some of my 
 woodworking skills and try some brass work. The cabinet is oiled oak and walnut, brass, and matte 
@@ -53,8 +53,8 @@ symbols. Don't be upset about this please.
 
 Your radio, cabinet and amplifier probably won't be the same as mine and the documents are 
 written with that in mind (hopefully). You could source your own parts and make it painful to you 
-too to make everything work just enough that, passed that pissed off state that you will certainly
-acheive doing something like this, you can accept the flaws and embrace the result. Parts that only 
+too to make everything work just enough that, past that pissed off state that you will certainly
+achieve doing something like this, you can accept the flaws and embrace the result. Parts that only 
 make sense for this build are marked as such. On the firmware side, expect to change pins, sensor 
 directions, the tuner's travel and the needle's limits; the Gospel should say where each one lives.
 
@@ -79,19 +79,19 @@ hardware/STLs/           the 76 printed parts (PLA, plus one TPU membrane) and a
 photos/                  the finished radio, wow, such radio, mucho bueno
 ```
 
-The KiCad sheets show what was built, drawn to be read. They aren't a PCB layout, so ECR and such do
+The KiCad sheets show what was built, drawn to be read. They aren't a PCB layout, so ERC and such do
 not resolve correctly, that is normal. I don't know how to operate KiCad for this purpose anyway, I
-use it to help route stuff visually only. I hope nobody's eyes bleeds too much looking at them. Both 
+use it to help route stuff visually only. I hope nobody's eyes bleed too much looking at them. Both 
 the KiCad schematics and the Bible should agree. If not, open an issue, I'll correct it.
 
 ## What's NOT in here
 
-I made my own antenna. I used what I had at home to make it. Its a 3 elements yagi, mainly because
-where I am, almost all the stations are on Mount Royal, making it pretty directionnal. You should
+I made my own antenna. I used what I had at home to make it. It's a 3 elements yagi, mainly because
+where I am, almost all the stations are on Mount Royal, making it pretty directional. You should
 definitely look what is best for your own case. The antenna build itself is in Bible and the Sketchup 
 file though, if you want to take a look.
 
-There is no build of materials. Mostly because this specific build is made using what I found in a
+There is no bill of materials. Mostly because this specific build is made using what I found in a
 pretty random fashion. Yes, I did buy the DAC, ADC, stepper, etc. but those are readily available in
 the same form I bought, and I am pretty sure you can substitute most of them for something similar
 and have similar results. Obviously, some adjustments will be needed, especially the STLs and the
@@ -107,15 +107,15 @@ other mad folks that might stumble here trying to resolve a problem that is a pa
 - Phil Schatzmann, for the [ESP32-A2DP](https://github.com/pschatzmann/ESP32-A2DP) library that
   handles Bluetooth audio.
 - My stupidity for making me do this and convincing myself that its a good idea.
-- My wife and kids for putting up with me. Its done now, papa can come home.
+- My wife and kids for putting up with me. It's done now, papa can come home.
 
-The factory schematic of the TM-838N is included for reference, but note that it is superseeded 
+The factory schematic of the TM-838N is included for reference, but note that it is superseded 
 by the KiCad schematic. The documents also cite the SAMS Photofact for this set, which is 
 copyrighted and not included.
 
 ## Disclaimer
 
-I have barely coded anything in this. Its all been vibe-coded with Claude Code and Codex. The artwork,
+I have barely coded anything in this. It's all been vibe-coded with Claude Code and Codex. The artwork,
 design, and anything other than sound and electrical engineering and the actual coding were done
 without AI, by me with the help of my friends and family.
 
