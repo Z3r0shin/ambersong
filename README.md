@@ -128,7 +128,9 @@ make this yours. I'll just help with what I can, if I can.
 
 - Firmware: GPL-3.0-or-later
 - Hardware design files (KiCad, STL): CERN-OHL-S-2.0
-- Documentation and photos: CC BY-SA 4.0
+- Documentation: CC BY-SA 4.0
+- Photos and renders: CC BY-NC-ND 4.0
+- The running hare on the dial: all rights reserved. It's family imagery, not for reuse.
 
-You can use any of it, change it and share it, commercially too, as long as what you share stays
-under the same license. Details and exceptions are in [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+Apart from the photos and the hare, you can use any of it, change it and share it, commercially
+too, as long as what you share stays under the same license. Details and exceptions are in [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).

@@ -5,6 +5,12 @@ Name
   "Ambersong" is the name of this project. It may be used to refer to it. A derivative work should
   make clear that it is not the original.
 
+The running hare
+
+  The running hare on the dial is personal family imagery. It is not licensed with the rest of
+  this project: no copying, no modification, no reuse in other works, no commercial use. See
+  LICENSE.
+
 Credits
 
   The author's parents and friends, for their input on the design.
@@ -18,9 +24,9 @@ Credits
   build time.
     https://github.com/pschatzmann/ESP32-A2DP
 
-  Claude (Anthropic) and ChatGPT (OpenAI) were used throughout the project.
-    https://www.anthropic.com/claude
-    https://chatgpt.com
+  The code was written with Claude Code (Anthropic) and Codex (OpenAI).
+    https://www.anthropic.com/claude-code
+    https://openai.com/codex/
 
   LLOYDS and TM-838 are the names of the original radio and its maker, used here only to identify
   the set this build is based on.

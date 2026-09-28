@@ -16,12 +16,25 @@ released under the same licence. The full texts are in LICENSES/.
       SPDX-License-Identifier: CERN-OHL-S-2.0
       LICENSES/CERN-OHL-S-2.0.txt
 
-  Documentation (README.md, everything under docs/, and photos/)
+  Documentation (README.md and everything under docs/)
       Creative Commons Attribution-ShareAlike 4.0 International
       SPDX-License-Identifier: CC-BY-SA-4.0
       LICENSES/CC-BY-SA-4.0.txt
 
+  Photos and renders (everything under photos/)
+      Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International
+      SPDX-License-Identifier: CC-BY-NC-ND-4.0
+      LICENSES/CC-BY-NC-ND-4.0.txt
+      They show the running hare (see below). They may be shared unchanged, with credit, for
+      non-commercial purposes only.
+
 Exceptions:
+
+  The running hare depiction is personal family imagery. Copyright (c) Zeroshin, all rights
+  reserved. None of the licences above apply to it, in whatever file it appears: the dial artwork,
+  the SketchUp model, renders and photos. It may not be copied out, modified, reused in another
+  work, or used for any commercial purpose. Builds derived from this project must use their own
+  artwork.
 
   hardware/schematics/LLOYDS TM-838 factory schematic.jpg is a scan of the manufacturer's original
   schematic for the LLOYDS TM-838N radio. It is included for reference only; the licences above

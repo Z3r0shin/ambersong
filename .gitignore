@@ -1,2 +1,6 @@
 .pio/
 .vscode/
+# KiCad and SketchUp automatic backups
+*-backups/
+*.skb
+*.kicad_prl
