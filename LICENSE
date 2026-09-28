@@ -1,0 +1,33 @@
+Ambersong — licensing
+
+Copyright (c) 2025-2026 Zeroshin
+
+This project is shared under three copyleft licences, one per kind of material. Anyone may use,
+study, change and share any part of it, including commercially, as long as what they share is
+released under the same licence. The full texts are in LICENSES/.
+
+  Firmware (everything under firmware/)
+      GNU General Public License v3.0 or later
+      SPDX-License-Identifier: GPL-3.0-or-later
+      LICENSES/GPL-3.0-or-later.txt
+
+  Hardware design files (everything under hardware/: the KiCad project, the STL files)
+      CERN Open Hardware Licence Version 2 - Strongly Reciprocal
+      SPDX-License-Identifier: CERN-OHL-S-2.0
+      LICENSES/CERN-OHL-S-2.0.txt
+
+  Documentation (README.md, everything under docs/, and photos/)
+      Creative Commons Attribution-ShareAlike 4.0 International
+      SPDX-License-Identifier: CC-BY-SA-4.0
+      LICENSES/CC-BY-SA-4.0.txt
+
+Exceptions:
+
+  hardware/schematics/LLOYDS TM-838 factory schematic.jpg is a scan of the manufacturer's original
+  schematic for the LLOYDS TM-838N radio. It is included for reference only; the licences above
+  do not apply to it.
+
+  Third-party code fetched at build time (the ESP32-A2DP library, the Arduino core and ESP-IDF)
+  keeps its own licence.
+
+Names: see NOTICE.

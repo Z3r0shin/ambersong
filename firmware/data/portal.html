@@ -1,0 +1,658 @@
+<!doctype html><html><head>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>Ambersong</title>
+<style>
+:root{--bg:#14120f;--card:#1e1b16;--line:#332e26;--ink:#e8e2d6;--dim:#9a9184;--amb:#e8a33d;--ok:#6fbf73;--bad:#d6604d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif}
+header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:.7rem 1rem;z-index:9}
+h1{margin:0;font-size:1.05rem;letter-spacing:.06em;color:var(--amb);font-weight:600}
+.pills{margin-top:.35rem;font-size:.78rem;color:var(--dim)}
+.pill{margin-right:.9rem;white-space:nowrap}
+.dot{display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:var(--bad);margin-right:.3rem;vertical-align:middle}
+.dot.on{background:var(--ok)}
+nav{display:flex;overflow-x:auto;background:var(--card);border-bottom:1px solid var(--line)}
+nav button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);
+  font:inherit;padding:.65rem .9rem;cursor:pointer}
+nav button.sel{color:var(--amb);border-bottom-color:var(--amb)}
+main{padding:1rem;max-width:46rem;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:.5rem;padding:.9rem;margin-bottom:.9rem}
+.card h2{margin:0 0 .6rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);font-weight:600}
+.row{display:flex;align-items:center;gap:.7rem;padding:.4rem 0;border-bottom:1px solid #262219}
+.row:last-child{border-bottom:0}
+.row label{flex:0 0 13rem}                 /* FIXED, so sliders line up */
+@media(max-width:34rem){
+  .row{flex-wrap:wrap}
+  .row label{flex:1 0 100%;margin-bottom:-.2rem}
+}
+#login .row label{flex:0 0 5.5rem}         /* a login form is not a settings grid */
+#login input{flex:1 1 auto;width:auto}
+.row .u{color:var(--dim);font-size:.8rem;min-width:3.2rem;text-align:right}
+input[type=range]{flex:1 1 8rem;min-width:5rem;accent-color:var(--amb)}
+input[type=number],input[type=text],input[type=password],select,textarea{
+  background:#0e0c09;color:var(--ink);border:1px solid var(--line);border-radius:.3rem;
+  padding:.35rem .45rem;font:inherit;width:5.5rem}
+input[type=text],input[type=password],select{width:12rem}
+textarea{width:100%;height:9rem;font-family:ui-monospace,monospace;font-size:.8rem}
+input[type=checkbox]{width:1.15rem;height:1.15rem;accent-color:var(--amb)}
+button.b{background:#2a251d;color:var(--ink);border:1px solid var(--line);border-radius:.35rem;
+  padding:.5rem .8rem;font:inherit;cursor:pointer;margin:.15rem .3rem .15rem 0}
+button.b:hover{border-color:var(--amb)}
+button.b.p{background:var(--amb);color:#1a1610;border-color:var(--amb);font-weight:600}
+button.b:disabled{opacity:.4;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;font-size:.9rem}
+.grid b{color:var(--dim);font-weight:400}
+.meter{height:.5rem;background:#0e0c09;border-radius:.25rem;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--amb)}
+#msg{position:fixed;left:50%;transform:translateX(-50%);bottom:1.2rem;background:#000c;border:1px solid var(--amb);
+  color:var(--ink);padding:.55rem .9rem;border-radius:.4rem;display:none;z-index:20;max-width:90vw}
+.ro{opacity:.55}
+.warn{color:var(--bad)}
+#login{max-width:20rem;margin:15vh auto}
+</style></head><body>
+<div id=app></div><div id=msg></div>
+<script>
+const $=s=>document.querySelector(s);
+let SC=null,VAL={},TAB=0,ST={},poll=null;
+
+//  A WARNING STAYS UP LONGER THAN AN ACKNOWLEDGEMENT. 2600 ms is a duration
+//  chosen for the word "applied"; a refusal is a sentence, and the author is
+//  reading it on the only interface he has once the cabinet is shut.
+function toast(t,bad){const m=$('#msg');m.textContent=t;m.style.borderColor=bad?'var(--bad)':'var(--amb)';
+  m.style.display='block';clearTimeout(m._t);
+  m._t=setTimeout(()=>m.style.display='none',bad?12000:2600);}
+
+//  EVERY REQUEST GETS A DEADLINE.
+//  fetch() has no timeout of its own: a request the radio never answers hangs
+//  for ever, and the page sits on "connecting to the radio..." with no retry
+//  and no error. That is not a hypothetical - it is what the author was looking
+//  at. Twelve seconds is far longer than this machine ever legitimately takes.
+async function api(p,body,ms){
+  const ac=new AbortController();
+  const t=setTimeout(()=>ac.abort(),ms||12000);
+  const o=body?{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams(body),signal:ac.signal}:{signal:ac.signal};
+  //  THE DEADLINE HAS TO COVER THE BODY TOO.
+  //  clearTimeout() used to sit in a finally on the fetch, which disarmed the
+  //  abort before r.text() ran - and headers-then-stall is exactly what this
+  //  machine does when it is out of TCP control blocks. loopTick would then
+  //  never resolve, never reschedule, and the dashboard stopped for good with
+  //  nothing on screen to say so.
+  let r, txt;
+  try{
+    r=await fetch(p,o);
+    if(r.status==401){SC=null;drawLogin();throw new Error('login');}
+    txt=await r.text();
+  }
+  catch(e){ if(e.message=='login')throw e; throw new Error('timeout'); }
+  finally{ clearTimeout(t); }
+  let j={};try{j=JSON.parse(txt)}catch(e){}
+  if(!r.ok){toast(j.e=='locked'?('locked out, '+j.s+' s'):(j.e||('error '+r.status)),1);throw new Error(j.e||r.status);}
+  return j;
+}
+
+// ---------- login ----------
+function drawLogin(){
+  if(poll){clearTimeout(poll);poll=null}
+  $('#app').innerHTML=`<main><div class=card id=login><h2>Ambersong</h2>
+    <div class=row><label>User</label><input type=text id=lu autocomplete=username></div>
+    <div class=row><label>Password</label><input type=password id=lp autocomplete=current-password></div>
+    <button class="b p" id=lb style=margin-top:.7rem>Sign in</button></div></main>`;
+  $('#lb').onclick=go;
+  $('#lp').onkeydown=e=>{if(e.key=='Enter')go()};
+  $('#lu').focus();
+  async function go(){
+    try{await api('/api/login',{u:$('#lu').value,p:$('#lp').value});boot();}catch(e){}
+  }
+}
+
+// ---------- first run: the shipped credentials have to go ----------
+//  The radio refuses every other endpoint until this is done (portal.cpp,
+//  requireLogin), so there is nothing else to draw and no way to skip it. A new
+//  password alone would clear the radio's gate (credsAreDefault() needs the name
+//  AND the password to be the shipped ones); this form also insists on a new
+//  name, because an account still called "admin" keeps half the shipped
+//  credentials. That rule is the page's; the radio accepts either.
+function drawMustChange(){
+  if(poll){clearTimeout(poll);poll=null}
+  $('#app').innerHTML=`<main><div class=card id=login><h2>Set your account</h2>
+    <p style="font-size:.85rem;color:var(--dim)">This radio is still on the
+    credentials it shipped with (admin / admin). Nothing else works until you
+    change them. What you set here is stored on the radio itself &mdash; it is
+    never in the firmware.</p>
+    <div class=row><label>User</label><input type=text id=cu autocomplete=username></div>
+    <div class=row><label>Password</label><input type=password id=cp autocomplete=new-password></div>
+    <div class=row><label>Again</label><input type=password id=cp2 autocomplete=new-password></div>
+    <button class="b p" id=cb style=margin-top:.7rem>Save</button>
+    <div id=cerr style="margin-top:.6rem;font-size:.85rem;color:var(--warn,#c66)"></div></div></main>`;
+  const err=m=>{$('#cerr').textContent=m};
+  $('#cb').onclick=go;
+  $('#cp2').onkeydown=e=>{if(e.key=='Enter')go()};
+  $('#cu').focus();
+  async function go(){
+    const u=$('#cu').value.trim(), p=$('#cp').value, p2=$('#cp2').value;
+    if(u.length<1||u.length>16) return err('pick a user name of 1 to 16 characters.');
+    if(u.toLowerCase()=='admin') return err('anything but "admin" - that is the one being replaced.');
+    if(p.length<6)  return err('the password needs at least six characters.');
+    if(p!==p2)      return err('the two passwords do not match.');
+    try{
+      await api('/api/passwd',{old:'admin',new:p,name:u});
+      //  The cached schema carries the old user name; drop it so the shell
+      //  redraws from what the radio now says rather than from the browser.
+      try{ localStorage.removeItem('amb.sc'); }catch(e){}
+      location.reload();
+    }catch(e){ err('the radio refused that: '+e.message); }
+  }
+}
+
+// ---------- shell ----------
+function drawShell(){
+  TABS=['Now'].concat(SC.tabs).concat(SC.admin?['Console']:[],['Account']);const tabs=TABS;
+  $('#app').innerHTML=`<header><h1>AMBERSONG</h1><div class=pills id=pills></div></header>
+    <nav id=nav></nav><main id=pane></main>`;
+  const n=$('#nav');
+  tabs.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;
+    b.onclick=()=>{TAB=i;drawTabs();drawPane()};n.appendChild(b)});
+  drawTabs();drawPane();
+}
+function drawTabs(){[...$('#nav').children].forEach((b,i)=>b.classList.toggle('sel',i==TAB));}
+
+function pills(){
+  const p=$('#pills');if(!p)return;
+  const d=(on,t)=>`<span class=pill><i class="dot${on?' on':''}"></i>${t}</span>`;
+  const n=ST.net||{};
+  p.innerHTML=d(ST.link,'link')+d(ST.homed,'needle')+d(n.ntp,'time')
+    +`<span class=pill>${ST.clock||'--:--'}</span>`
+    +`<span class=pill>${n.sta?n.ssid+' '+n.rssi+'dBm':'access point'}</span>`
+    +`<span class=pill>${n.ip||''}</span>`
+    +(ST.driftpend?'<span class="pill warn">NEEDLE OFF - re-index pending'+(ST.reidxtry?' (try '+ST.reidxtry+'/3)':'')+'</span>':'')
+    +(ST.fault?'<span class="pill warn">NEEDLE FAULT</span>':'')
+    +(ST.reidx?'<span class="pill warn">NEEDLE RE-INDEXING</span>':'')
+    +(ST.hunt?'<span class="pill warn">NEEDLE HUNTING</span>':'')
+    +(ST.hello&&!ST.astate?'<span class="pill warn">AUDIO BOARD SENDS NO STATE</span>':'')
+    +(ST.setlock?'<span class="pill warn">SETTINGS LOCKED - newer version stored</span>':'')
+    +(ST.rtc==1?'<span class="pill warn">BATTERY CLOCK LOST ITS TIME - check its battery</span>':'')
+    +(ST.rtc==2?'<span class="pill warn">BATTERY CLOCK NOT ANSWERING</span>':'')
+    +(ST.linkver&&!ST.link?'<span class="pill warn">BOARDS RUN DIFFERENT PROTOCOL VERSIONS - flash both</span>':'')
+    +(ST.ota?'<span class="pill warn">UPDATING</span>':'');
+}
+
+// ---------- widgets ----------
+function widget(s){
+  const ro=s.ro?' disabled':'';
+  if(s.kind==1) return `<input type=checkbox data-k="${s.k}"${ro}>`;
+  if(s.kind==3) return `<select data-k="${s.k}"${ro}>`+
+    s.c.split(',').map((o,i)=>`<option value=${i}>${o}</option>`).join('')+`</select>`;
+  return `<input type=range data-k="${s.k}" data-r=1 min=${s.lo} max=${s.hi} step=${s.st}${ro}>`+
+         `<input type=number data-k="${s.k}" min=${s.lo} max=${s.hi} step=${s.st}${ro}>`;
+}
+function fillWidgets(skip){
+  document.querySelectorAll('[data-k]').forEach(e=>{
+    if(e===skip)return;
+    const v=VAL[e.dataset.k];if(v===undefined)return;
+    if(e.type=='checkbox')e.checked=v!=0;else e.value=(Math.round(v*1000)/1000);
+  });
+}
+function bindWidgets(){
+  document.querySelectorAll('[data-k]').forEach(e=>{
+    e.onchange=async()=>{
+      const v=e.type=='checkbox'?(e.checked?1:0):parseFloat(e.value);
+      try{const r=await api('/api/set',{k:e.dataset.k,v:v});VAL[e.dataset.k]=r.v;
+        //  r.warn: the value was stored and it changed the tuning curve for the
+        //  worse. Silence here is how three marks got demoted behind a number.
+        if(r.warn)toast(r.warn,1);
+        document.querySelectorAll(`[data-k="${e.dataset.k}"]`).forEach(o=>{
+          if(o.type=='checkbox')o.checked=r.v!=0;else o.value=Math.round(r.v*1000)/1000;});
+      }catch(x){}
+    };
+    if(e.dataset.r)e.oninput=()=>{const n=e.nextElementSibling;if(n&&n.type=='number')n.value=e.value;};
+  });
+}
+
+//  r.warn is a REFUSAL carried on a 200: the radio understood the request and
+//  declined it. It must not be painted as an acknowledgement.
+function act(a,v){return api('/api/act',{a:a,v:v||0})
+  .then(r=>{if(r.warn)toast(r.warn,1);else toast(r.m);})
+  //  A timeout was swallowed: an action that took the link down with it (the
+  //  rescue access point) showed nothing at all.
+  .catch(e=>{if(e.message=='timeout')toast('no answer - the network may have changed; see the Console tab',1);});}
+
+// ---------- panes ----------
+function settingsCard(tabIdx){
+  const rows=SC.set.filter(s=>s.t==tabIdx);
+  if(!rows.length)return '';
+  return `<div class=card><h2>${SC.tabs[tabIdx]}</h2>`+rows.map(s=>
+    `<div class="row${s.ro?' ro':''}"><label>${s.l}</label>${widget(s)}<span class=u>${s.u}</span></div>`
+  ).join('')+`</div>`;
+}
+
+const ACTIONS={
+ // tab name -> [ [label, action, arg, adminOnly, primary] ]
+ Audio:[['Pot: minimum','pot.min',0,1],['Pot: centre','pot.ctr',0,1],['Pot: maximum','pot.max',0,1],
+        ['Re-read the A32','sys.getcfg',0,1]],
+ Needle:[['Home','needle.home',0,1,1],['Re-index','needle.reindex',0,1],['Sweep once','needle.sweep',0,1],['Sweep repeatedly','needle.sweep',1,1],
+        ['Track the tuner','needle.track',0,1],['STOP','needle.stop',0,1],
+        ['&#9664; 100','needle.jog',-100,1],['&#9664; 10','needle.jog',-10,1],
+        ['10 &#9654;','needle.jog',10,1],['100 &#9654;','needle.jog',100,1],
+        ['Set low limit here','needle.limitLow',0,1],['Set high limit here','needle.limitHigh',0,1],
+        ['Calibrate the index','needle.calBand',3,1],['Abort calibration','needle.calAbort',0,1],
+        ['Tuner = low end','needle.tuneLow',0,1],['Tuner = high end','needle.tuneHigh',0,1],
+        ['Mark station A here','tune.markA','?',1],['Mark station B here','tune.markB','?',1],
+        ['Mark station C here','tune.markC','?',1],['Clear all marks','tune.clear',0,1],
+        ['Dial &#8722;0.1 MHz','tune.nudge',-0.1,1],['Dial +0.1 MHz','tune.nudge',0.1,1],
+        ['Reset the dial correction to 0','tune.nudgeZero',0,1],
+        ['Needle Limit &#9664; 20','needle.nudge',-20,1],['Needle Limit 20 &#9654;','needle.nudge',20,1],
+        ['Measure this dial position','rda.sample',0,1,1],
+        ['Drop one sample (slot 0-11)','tune.drop','?',1],
+        ['Forget the fixed features','rda.spurClear',0,1]],
+ Bluetooth:[['Pair a new device','bt.pair',0,0,1],['Disconnect','bt.disconnect',0,0],
+        ['Forget every pairing','bt.forget',0,1]],
+ System:[['Raise the rescue access point','net.forceAp',0,1]],
+ Display:[['Show 8888','disp.test',1,1],['Blank','disp.test',2,1],['Normal','disp.test',0,1]]
+};
+function actionCard(name){
+  const list=(ACTIONS[name]||[]).filter(a=>!a[3]||SC.admin);
+  if(!list.length)return '';
+  return `<div class=card><h2>Actions</h2>`+list.map((a,i)=>
+    `<button class="b${a[4]?' p':''}" data-a="${a[1]}" data-v="${a[2]}">${a[0]}</button>`).join('')+
+    (name=='Needle'?`<div style=margin-top:.6rem class=grid><b>position</b><span id=npos>-</span>
+      <b>state</b><span id=nstate>-</span><b>index sensor</b><span id=nidx>-</span><b>calibration</b><span id=ncal>idle</span>
+      <b>last measurement</b><span id=nsmp>-</span>
+      <b>tuning curve</b><span id=ncurve>-</span>
+      <b>tuner reaches</b><span id=nreach>-</span></div>`:'')+`</div>`;
+}
+
+function paneNow(){
+  return `<div class=card><h2>Now</h2>
+   <div class=grid>
+    <b>source</b><span id=vsrc>-</span>
+    <b>volume</b><span id=vvol>-</span>
+    <b>bluetooth</b><span id=vbt>-</span>
+    <b>needle</b><span id=vned>-</span>
+    <b>tuning</b><span id=vtune>-</span>
+    <b>index sensor</b><span id=vidx>-</span>
+    <b>amplifier</b><span id=vamp>-</span>
+    <b>uptime</b><span id=vup>-</span>
+    <b>DAC mute</b><span id=vzdd>-</span>
+    <b>volume knob</b><span id=vpot>-</span>
+   </div>
+   <div style=margin-top:.6rem><div class=meter><i id=mL style=width:0></i></div>
+   <div class=meter style=margin-top:.2rem><i id=mR style=width:0></i></div>
+   <div style="font-size:.75rem;color:var(--dim)" id=vpk>-</div></div>
+  </div>
+  <div class=card><h2>Music</h2>
+   <button class="b p" data-a=bt.play data-v=0>Play</button>
+   <button class=b data-a=bt.pause data-v=0>Pause</button>
+   <button class=b data-a=bt.prev data-v=0>&#9664;&#9664;</button>
+   <button class=b data-a=bt.next data-v=0>&#9654;&#9654;</button>
+   <button class=b data-a=bt.disconnect data-v=0>Disconnect</button>
+   <button class=b data-a=bt.pair data-v=0>Pair</button>
+   <div class=row style=margin-top:.5rem><label>Volume</label>
+     <input type=range data-k=volume data-r=1 min=0 max=255 step=1>
+     <input type=number data-k=volume min=0 max=255 step=1></div>
+   <div class=row><label>Mute</label><input type=checkbox data-k=muted></div>
+  </div>`;
+}
+
+function paneSystem(){
+  if(!SC.admin)return `<div class=card><h2>System</h2><p>Administrator only.</p></div>`;
+  return `<div class=card><h2>Settings file</h2>
+    <button class=b id=dl>Download</button>
+    <button class=b id=up>Upload what is below</button>
+    <textarea id=sf placeholder="paste a settings file here"></textarea></div>
+   <div class=card><h2>Network</h2>
+    <div class=row><label>WiFi network</label><input type=text id=nssid></div>
+    <div class=row><label>WiFi password</label><input type=password id=npass placeholder="unchanged"></div>
+    <div class=row><label>NTP server</label><input type=text id=nntp></div>
+    <div class=row><label>Timezone (POSIX)</label><input type=text id=ntz></div>
+    <button class=b id=nsave>Save network</button></div>
+   <div class=card><h2>Firmware</h2>
+    <div class=grid><b>running</b><span>${SC.fw}</span></div>
+    <p style="font-size:.85rem;color:var(--dim)">The needle parks and the display goes dark while an
+    update writes. The radio keeps playing - the audio is on the other processor.</p>
+    <input type=file id=fw accept=".bin"><button class="b p" id=fwgo>Update the main board</button>
+    <div class=meter style=margin-top:.5rem><i id=fwbar style=width:0></i></div>
+    <p style="font-size:.85rem;color:var(--dim);margin-top:1rem">The audio board updates
+    over the link between the two processors - there is no cable to it. The music fades
+    out and comes back on its own.</p>
+    <input type=file id=aw accept=".bin"><button class=b id=awgo>Update the audio board</button>
+    <div class=meter style=margin-top:.5rem><i id=awbar style=width:0></i></div></div>
+   <div class=card><h2>Machine</h2>
+    <button class=b data-a=sys.save data-v=0>Save settings now</button>
+    <button class=b data-a=sys.quiet data-v=120>WiFi off for 2 minutes</button>
+    <button class=b data-a=sys.dctest data-v=1>Constant DC test ON</button>
+    <button class=b data-a=sys.dctest data-v=0>Constant DC test off</button>
+    <button class=b data-a=sys.zfloor data-v=1>Zero-data floor ON</button>
+    <button class=b data-a=sys.zfloor data-v=0>Zero-data floor off</button>
+    <button class=b data-a=sys.pot data-v=0>Ignore the volume pot</button>
+    <button class=b data-a=sys.pot data-v=1>Volume pot back on</button>
+    <button class=b data-a=sys.tail data-v=1>Sign-extended tail ON</button>
+    <button class=b data-a=sys.tail data-v=0>Sign-extended tail off</button>
+    <button class=b data-a=sys.rebootA32 data-v=0>Reboot the audio board</button>
+    <button class=b id=rb>Reboot the main board</button></div>`;
+}
+
+function paneAccount(){
+  return `<div class=card><h2>My password</h2>
+    <div class=row><label>Current</label><input type=password id=pold></div>
+    <div class=row><label>New</label><input type=password id=pnew></div>
+    <button class=b id=pgo>Change it</button></div>
+   <div class=card><h2>Accounts</h2><div id=ulist>...</div>
+    ${SC.admin?`<div class=row style=margin-top:.6rem><label>New user</label>
+      <input type=text id=un placeholder=name></div>
+     <div class=row><label>Their password</label><input type=password id=up2></div>
+     <button class=b id=uadd>Add a normal user</button>
+     <p style="font-size:.8rem;color:var(--dim)">Normal users get the music, the volume and the
+     lights. Everything that changes what the machine IS stays with the owner account.</p>`:''}
+   </div>
+   <div class=card><button class=b id=lo>Sign out</button></div>`;
+}
+
+//  THE CONSOLE. What the main board prints, carried inside the ordinary state poll
+//  (?log=) so it costs no connection of its own - see the polling budget. Commands
+//  go through /api/cons exactly as if typed at the USB port, Enter included.
+function paneConsole(){
+  return `<div class=card><h2>Console</h2>
+    <p style="font-size:.85rem;color:var(--dim)">Everything the main board prints, refreshed with
+    the dashboard every few seconds. Send ONE key per line - each character is its own command -
+    except when a prompt asks for a line (network, clock). It has
+    the same power as the cable, including z (erase the RF calibration) and ~ (reset the accounts).</p>
+    <pre id=clog style="max-height:60vh;overflow:auto;white-space:pre-wrap;font-size:.8rem;margin:0 0 .5rem"></pre>
+    <div class=row><input type=text id=cin placeholder="s   ?   H ..." autocomplete=off>
+    <button class="b p" id=csend>Send</button></div></div>`;
+}
+function wireConsole(){
+  const pre=$('#clog');pre.textContent=LOGTXT;pre.scrollTop=pre.scrollHeight;
+  const send=async()=>{
+    const i=$('#cin');const k=i.value;if(!k)return;
+    try{
+      await api('/api/cons',{k:k});i.value='';
+      //  One early refresh so the answer shows in about a second, not five. One
+      //  connection per command, at human speed, is inside the budget.
+      if(poll)clearTimeout(poll);poll=setTimeout(loopTick,900);
+    }catch(e){}
+  };
+  $('#csend').onclick=send;
+  $('#cin').onkeydown=e=>{if(e.key==='Enter')send()};
+}
+function logTake(L){
+  const NL=String.fromCharCode(10);
+  if(LOGNEXT&&L.from>LOGNEXT)LOGTXT+='[... older output was overwritten before it could be shown ...]'+NL;
+  if(LOGNEXT&&L.from<LOGNEXT)LOGTXT+='[... the main board restarted ...]'+NL;
+  LOGTXT=(LOGTXT+L.t).slice(-60000);LOGNEXT=L.next;
+  const pre=$('#clog');if(!pre)return;
+  const atEnd=pre.scrollHeight-pre.scrollTop-pre.clientHeight<40;
+  pre.textContent=LOGTXT;if(atEnd)pre.scrollTop=pre.scrollHeight;
+}
+function drawPane(){
+  //  Whatever else happens, the pane gets drawn. paint() is decoration.
+  const p=$('#pane');const name=TABS[TAB]||'Now';
+  if(TAB==0)              p.innerHTML=paneNow();
+  //  + its Actions card, which holds the rescue access point button. It was
+  //  once defined in ACTIONS and never drawn, so the button did not exist.
+  else if(name=='System') p.innerHTML=paneSystem()+(SC.admin?actionCard('System'):'');
+  else if(name=='Account')p.innerHTML=paneAccount();
+  else if(name=='Console')p.innerHTML=paneConsole();
+  else                    p.innerHTML=settingsCard(TAB-1)+actionCard(name);
+  fillWidgets();bindWidgets();
+  //  Refresh the stored values when a tab is OPENED rather than on a timer.
+  //  One connection when you look at something beats one every ten seconds
+  //  forever - see the polling budget above.
+  if(TAB>0&&TAB<=SC.tabs.length)refresh().catch(()=>{});
+  //  '?' means ask. Marking a station needs a typed frequency, and a fixed
+  //  data-v cannot carry one. tune.drop uses it too, for a slot number, under
+  //  the same frequency prompt.
+  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{
+    let v=b.dataset.v;
+    if(v==='?'){
+      v=b.dataset.a=='tune.drop'
+        ?prompt('Which sample slot to drop (0-11)? The settings file (tuneMark lines) lists them.','')
+        :prompt('Frequency of the station you are tuned to now, in MHz:','107.3');
+      if(v===null||v==='')return;
+      v=v.trim().replace(',','.');
+    }
+    act(b.dataset.a,v);
+  });
+  if(name=='System')wireSystem();
+  if(name=='Account')wireAccount();
+  if(name=='Console')wireConsole();
+  paint();paintWidgets();
+}
+
+function wireSystem(){
+  //  Locked settings are refused (409) with a sentence; show it rather than
+  //  navigating to a page of plain text.
+  $('#dl').onclick=()=>{if(ST.setlock){toast('Settings are locked: this firmware is older than the one that saved them, so what it holds are defaults. Flash the newer firmware to get them back.',1);return;}
+    location.href='/api/settings.txt';};
+  $('#up').onclick=async()=>{
+    //  Was raw fetch: no deadline, and an expired session read as "upload
+    //  failed" instead of sending you to the login form.
+    const ac=new AbortController();
+    const t=setTimeout(()=>ac.abort(),20000);
+    try{
+      const r=await fetch('/api/settings.txt',{method:'POST',
+        headers:{'Content-Type':'text/plain'},body:$('#sf').value,signal:ac.signal});
+      if(r.status==401){SC=null;drawLogin();return;}
+      const j=await r.json().catch(()=>({}));
+      //  j.warn is a REFUSAL carried alongside a 200: the file was accepted and
+      //  something inside it was not. It must not be rendered as a success.
+      if(r.ok&&j.warn) toast(j.warn,1);
+      else             toast(r.ok?(j.m||'applied'):'upload failed',!r.ok);
+      if(r.ok)refresh().catch(()=>{});
+    }catch(e){ toast('the radio did not answer',1); }
+    finally{ clearTimeout(t); }
+  };
+  //  Do not let a failed prefill look like three empty fields the user can
+  //  then "save". Save stays disabled until the current settings have arrived.
+  $('#nsave').disabled=true;
+  api('/api/net').then(n=>{
+    $('#nssid').value=n.ssid;$('#nntp').value=n.ntp;$('#ntz').value=n.tz;
+    $('#nsave').disabled=false;
+  }).catch(e=>{ toast('could not read the network settings - not safe to save',1); });
+  $('#nsave').onclick=()=>api('/api/net',{ssid:$('#nssid').value,pass:$('#npass').value,
+    ntp:$('#nntp').value,tz:$('#ntz').value}).then(r=>toast(r.m)).catch(()=>{});
+  $('#rb').onclick=()=>{if(confirm('Reboot the main board?'))api('/api/reboot',{}).then(()=>toast('rebooting'));};
+  const push=(inp,bar,url,what)=>{
+    const f=$(inp).files[0];if(!f){toast('choose a .bin first',1);return;}
+    const fd=new FormData();fd.append('f',f);
+    const x=new XMLHttpRequest();
+    x.upload.onprogress=e=>{$(bar).style.width=(100*e.loaded/e.total)+'%'};
+    x.onload=()=>{let m='';try{m=JSON.parse(x.responseText).m||JSON.parse(x.responseText).e}catch(e){}
+      toast(x.status==200?(m||'written - rebooting'):(m||'update failed'),x.status!=200);};
+    x.onerror=()=>toast('the connection dropped mid-update',1);
+    x.open('POST',url);x.send(fd);
+    toast('uploading '+what+' - do not cut the power');
+  };
+  $('#fwgo').onclick=()=>push('#fw','#fwbar','/api/ota/s3','the main board');
+  $('#awgo').onclick=()=>push('#aw','#awbar','/api/ota/a32','the audio board');
+}
+function wireAccount(){
+  $('#pgo').onclick=()=>api('/api/passwd',{old:$('#pold').value,new:$('#pnew').value})
+    .then(r=>{toast(r.m);$('#pold').value='';$('#pnew').value='';}).catch(()=>{});
+  $('#lo').onclick=()=>api('/api/logout',{}).then(()=>{SC=null;drawLogin()});
+  api('/api/users').catch(()=>({u:[]})).then(u=>{
+    $('#ulist').innerHTML=u.u.map(x=>`<div class=row><label>${x.n}${x.a?' (owner)':''}</label>`+
+      (SC.admin&&x.i>0?`<button class=b data-del=${x.i}>Remove</button>`:'')+`</div>`).join('');
+    document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>
+      api('/api/user/del',{i:b.dataset.del}).then(r=>{toast(r.m);wireAccount()}));
+  });
+  if($('#uadd'))$('#uadd').onclick=()=>api('/api/user/add',{n:$('#un').value,p:$('#up2').value})
+    .then(r=>{toast(r.m);wireAccount()}).catch(()=>{});
+}
+
+// ---------- live ----------
+//  DEFENSIVE ON PURPOSE. This runs before the first poll has answered, and a
+//  single undefined field used to abort the whole boot sequence.
+function paint(){
+  if(!ST)return;
+  try{
+    pills();
+    const g=(i,v)=>{const e=document.getElementById(i);if(e)e.textContent=v;};
+    const n=v=>(v===undefined||v===null)?'-':v;
+    g('vsrc',n(ST.src));
+    g('vtune',(ST.tune?ST.tune:'-')
+      +(ST.tunepm===undefined?'':'   ('+(ST.tunepm/10).toFixed(1)+'%)')
+      +(ST.tuning?'   TUNING':'')
+      +(ST.magnet===0?'   [weak magnet]':''));
+    g('vidx',ST.idx===undefined?'-':(ST.idx?'ON  (magnet over sensor)':'off'));
+    g('vvol',(ST.vol===undefined||!ST.astate)?'-':(ST.vol+' / 255'+(ST.muted?'   MUTED':'')));
+    g('vbt',n(ST.bt)+(ST.peer?' - '+ST.peer:''));
+    g('vned',ST.pos===undefined?'-':(ST.pos+' half-steps, '+n(ST.nstate)+(ST.tune?', '+ST.tune:'')));
+    g('vamp',ST.amp===undefined?'-':(ST.amp?'on':'off'));
+    g('vup',n(ST.up));
+    //  THE ZERO-DATA WATCH. zrel counts the DAC leaving its zero-data analogue
+    //  mute. That release was a pop suspect and was excluded on 2026-09-10 -
+    //  zrel stayed frozen through minutes of pops (Firmware Gospel §10); the
+    //  watch is kept as telemetry. "Xs ago" lets an ear and the counter be
+    //  compared: hear a pop, look here, see whether it just moved.
+    g('vzdd',(ST.zrel===undefined||!ST.astate)?'-':(
+      (ST.zmute?'MUTED NOW':'passing audio')
+      +'   -   '+ST.zrel+' release'+(ST.zrel==1?'':'s')
+      +(ST.zsince>=0?'  (last '+(ST.zsince<1000?'just now':Math.round(ST.zsince/1000)+'s ago')+')':'')
+      +(ST.stalls?'   stalls '+ST.stalls+' (max '+Math.round(ST.stallus/1000)+' ms)':'')
+      +(ST.i2sraw?'   i2s 0x'+ST.i2sraw.toString(16):'')
+      +(ST.zfloor?'   [floor ON]':'')+(ST.tail?'   [TAIL ON]':'')));
+    //  THE VOLUME WATCH. vjump is the headline - the biggest single-update
+    //  jump the knob's reading has ever asked for. With nobody touching it,
+    //  a large number here is the ADC, not a hand. gmax says whether it
+    //  reached the multiply: 65536 is unity, i.e. full scale.
+    g('vpot',(ST.praw===undefined||!ST.astate)?'-':(
+      'raw '+ST.praw+' (seen '+ST.pmin+'..'+ST.pmax+')'
+      +'   biggest jump '+ST.vjump+' vol / '+ST.pjump+' raw'
+      +'   steps '+ST.vsteps
+      +'   gain '+ST.gmin+'..'+ST.gmax+'/65536'
+      +(ST.upot?'':'   [POT IGNORED]')));
+    //  + WHY, when homing gave up: the reason was published and never shown.
+    //  The live index on the Needle card too (it was on the Now card only). The
+    //  page refreshes every few seconds; to WATCH crossings, send l in the Console.
+    g('nidx',ST.idx===undefined?'-':(ST.idx?'ON  (magnet over sensor)':'off'));
+    g('npos',n(ST.pos));g('nstate',n(ST.nstate)+(ST.fault?' - '+ST.fault:''));
+    g('ncal',ST.calbusy?(ST.calpct+'%  '+ST.calmsg):(ST.calmsg||'idle'));
+    //  A measurement takes 9 s, or 60 if it has to sweep the whole window, and
+    //  it happens on the RDA's own task - so the page has to say it is running
+    //  or the button looks dead and gets pressed again.
+    g('nsmp',ST.smpbusy?('measuring '+(ST.smppct||0)+'% ...'):(ST.smp||'none yet'));
+    //  The MODEL, not the mark count - they disagree when a fit is refused.
+    g('ncurve',ST.tunemodel===undefined?'-':
+      (ST.tunemarks+' mark'+(ST.tunemarks==1?'':'s')+', '+ST.tunemodel
+       +(ST.toff?'   [hand offset '+(ST.toff>0?'+':'')+(ST.toff/10).toFixed(1)+' MHz]':'')));
+    g('nreach',ST.reach0===undefined?'-':
+      ((ST.reach0/10).toFixed(1)+' - '+(ST.reach1/10).toFixed(1)+' MHz'));
+    const bar=(i,db)=>{const e=document.getElementById(i);if(e)e.style.width=
+      (db===undefined?0:Math.max(0,Math.min(100,(db+60)/60*100)))+'%'};
+    bar('mL',ST.pkL);bar('mR',ST.pkR);
+    g('vpk',(ST.pkL===undefined||!ST.astate)?'-':
+      (ST.pkL.toFixed(1)+' / '+ST.pkR.toFixed(1)+' dBFS'+(ST.clip?'   CLIPPING':'')));
+  }catch(e){console.error('paint',e)}
+}
+
+//  The live values that belong to widgets rather than to text: the volume knob
+//  is PHYSICAL, so the slider has to follow the hand on the front of the radio.
+//  Never while it is being dragged, or it would fight the person dragging it.
+function paintWidgets(){
+  if(ST.vol===undefined||!ST.astate)return;
+  document.querySelectorAll('[data-k=volume]').forEach(e=>{
+    if(document.activeElement===e)return;
+    if(e.value!=ST.vol)e.value=ST.vol;
+  });
+  VAL.volume=ST.vol;
+  document.querySelectorAll('[data-k=muted]').forEach(e=>{
+    if(e.type=='checkbox')e.checked=ST.muted!=0;
+  });
+  VAL.muted=ST.muted;
+}
+
+async function refresh(){
+  VAL=await api('/api/values');
+  //  Do not yank a control out from under a finger mid-drag.
+  fillWidgets(document.activeElement);
+}
+
+//  POLLING HAS A HARD BUDGET, and it is the ESP32's, not the browser's.
+//  This server takes ONE connection at a time and closes each one itself, so
+//  every poll leaves a TCP control block in TIME_WAIT on the radio for about a
+//  minute against a pool of roughly sixteen. Measured: about twenty to forty
+//  rapid connections and it stops accepting entirely, then recovers after a
+//  minute or two of silence. Ping stays perfect throughout, which is what made
+//  this look like anything but what it is.
+//
+//  Once a second - the obvious choice - is sixty outstanding blocks against a
+//  pool of sixteen. It could never have worked.
+//
+//  Worse, the old code polled at the SAME rate when the polls were failing,
+//  which guaranteed the exhaustion could never drain. Backing off is not
+//  politeness here, it is the only way the page recovers on its own.
+const POLL_MIN=5000, POLL_MAX=30000;
+//  The tab list, and the console's place in the log. TABS is built once per shell so a
+//  pane is found by name, not by index arithmetic that a new tab would silently break.
+let TABS=[],LOGNEXT=0,LOGTXT='';
+let pollMs=POLL_MIN;
+
+function schedule(){
+  if(poll)clearTimeout(poll);
+  poll=setTimeout(loopTick,pollMs);
+}
+async function loopTick(){
+  //  A tab in a pocket does not need the dashboard.
+  if(document.hidden){pollMs=POLL_MIN;schedule();return;}
+  try{
+    const wantLog=SC&&SC.admin&&TABS[TAB]=='Console';
+    ST=await api('/api/state'+(wantLog?'?log='+LOGNEXT:''));
+    if(ST.log)logTake(ST.log);
+    paint();paintWidgets();
+    pollMs=POLL_MIN;
+  }catch(e){
+    //  A SESSION THAT EXPIRED IS NOT A FAILED POLL.
+    //  api() has already drawn the login form. Rescheduling here rebuilt that
+    //  form every five seconds, wiping a half-typed password. Stop; the login
+    //  starts everything again.
+    if(e.message=='login')return;
+    pollMs=Math.min(pollMs*2,POLL_MAX);
+  }
+  schedule();
+}
+
+//  THE PAGE MUST NEVER RENDER NOTHING.
+//  The old version did `catch(e){return;}` on the first two fetches, so a
+//  request that timed out left a completely blank document with no message and
+//  no retry - which is exactly what the author saw: "it loads but doesn't show
+//  anything". A dashboard that cannot reach its machine has to SAY so.
+function showStatus(msg, sub){
+  $('#app').innerHTML=`<main><div class=card style="max-width:22rem;margin:15vh auto">
+    <h2>Ambersong</h2><p>${msg}</p>
+    ${sub?`<p style="font-size:.85rem;color:var(--dim)">${sub}</p>`:''}</div></main>`;
+}
+
+let bootMs=1000;
+async function boot(){
+  if(!SC)showStatus('connecting to the radio...');
+  let b;
+  //  ONE request, not three - see the note on /api/boot. The document plus this
+  //  is the whole of a page load.
+  //  Offer the schema we already have. The radio answers "null" if it is
+  //  still current, which is most of the time - see the note on schemaTag().
+  let cached=null,ctag='';
+  try{ cached=JSON.parse(localStorage.getItem('amb.sc')||'null'); ctag=cached?cached.tag:''; }catch(e){}
+  try{ b=await api('/api/boot?sc='+encodeURIComponent(ctag)); }
+  catch(e){
+    if(e.message=='login')return;          // the login form is already up
+    bootMs=Math.min(bootMs*2,15000);
+    showStatus('no answer from the radio.',
+               'retrying in '+Math.round(bootMs/1000)+' s. It answers slowly when it is busy.');
+    setTimeout(boot,bootMs);
+    return;
+  }
+  bootMs=1000;
+  SC=b.sc||cached;
+  VAL=b.val; ST=b.st||{};
+  //  BEFORE the schema check, because the schema is not what this depends on
+  //  and a machine still on admin/admin must be able to say so even if the
+  //  settings list never arrives.
+  if(ST.mustchg){ drawMustChange(); return; }
+  if(!SC){ showStatus('the radio sent no settings list.','reload to try again'); return; }
+  if(b.sc){ try{ localStorage.setItem('amb.sc',JSON.stringify(b.sc)); }catch(e){} }
+  drawShell();
+  schedule();
+}
+boot();
+</script></body></html>
