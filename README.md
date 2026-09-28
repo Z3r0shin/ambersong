@@ -31,9 +31,9 @@ match. The frequency scale isn't a straight line, so the radio calibrates itself
 an RDA5807M FM chip listens for the tube set's local oscillator, works out which station the set 
 is really tuned to and corrects the needle's curve in firmware.
 
-The tube radio's sound output goes through a PCM1802 converter into the audio board, out through a
+The tube radio's sound output goes through a PCM1802 ADC converter into the audio board, out through a
 PCM5102A DAC to the amplifier and speakers of a repurposed Kramer Tavor 5-O pair. A front DPDT switch 
-changes the audio input from radio, Bluetooth or an AUX input. Four LED-filament digits glass
+changes the audio from radio, Bluetooth or an AUX input. Four LED-filament digits at the top
 show the time from a battery-backed RTC that sets itself over the network. A small web page on
 the home network shows and changes every setting and updates both boards over WiFi.
 
@@ -42,7 +42,7 @@ the home network shows and changes every setting and updates both boards over Wi
 Two documents describe the whole machine: the Hardware Bible for everything physical and the
 Firmware Gospel for the code. Each one is meant to be the book you trust for its half of the
 radio. The religious names are iconography, nothing more: I'm not religious, I just like the
-symbols.
+symbols. Don't be upset about this please.
 
 - [`docs/HARDWARE-BIBLE.md`](docs/HARDWARE-BIBLE.md): what is wired to what, fitted values,
   the tube radio circuit, the FM antenna, the amplifier, the cabinet and the printed parts.
@@ -52,11 +52,11 @@ symbols.
 ## Building your own
 
 Your radio, cabinet and amplifier probably won't be the same as mine and the documents are 
-written with that in mind. You could source your own parts and make it painful to you too to 
-make everything work just enough that passed that pissed off state you can accept the flaws and
-embrace the result. Parts that only make sense for this build are marked as such. On the firmware
-side, expect to change pins, sensor directions, the tuner's travel and the needle's limits; the 
-Gospel should say where each one lives.
+written with that in mind (hopefully). You could source your own parts and make it painful to you 
+too to make everything work just enough that, passed that pissed off state that you will certainly
+acheive doing something like this, you can accept the flaws and embrace the result. Parts that only 
+make sense for this build are marked as such. On the firmware side, expect to change pins, sensor 
+directions, the tuner's travel and the needle's limits; the Gospel should say where each one lives.
 
 The firmware is one PlatformIO project with two environments, `s3` for the main board (ESP32-S3,
 N16R8) and `a32` for the audio board (ESP32). The toolchain is pinned to `espressif32@7.0.1`, just
@@ -74,13 +74,29 @@ a tube radio. Hardware Bible §31.1 covers what that means in this build.
 ```
 docs/                    the Hardware Bible and the Firmware Gospel
 firmware/                the PlatformIO project for both boards
-hardware/schematics/     the KiCad project, and the radio's factory schematic
-hardware/STLs/           the 76 printed parts (PLA, plus one TPU membrane)
-photos/                  the finished radio
+hardware/schematics/     the KiCad project, a collated PDF file and the radio's factory schematic
+hardware/STLs/           the 76 printed parts (PLA, plus one TPU membrane) and a Sketchup project with all the parts
+photos/                  the finished radio, wow, such radio, mucho bueno
 ```
 
-The KiCad sheets show what was built, drawn to be read. They aren't a PCB layout, and where a
-sheet and the Hardware Bible disagree, the Bible wins.
+The KiCad sheets show what was built, drawn to be read. They aren't a PCB layout, so ECR and such do
+not resolve correctly, that is normal. I don't know how to operate KiCad for this purpose anyway, I
+use it to help route stuff visually only. I hope nobody's eyes bleeds too much looking at them. Both 
+the KiCad schematics and the Bible should agree. If not, open an issue, I'll correct it.
+
+## What's NOT in here
+
+I made my own antenna. I used what I had at home to make it. Its a 3 elements yagi, mainly because
+where I am, almost all the stations are on Mount Royal, making it pretty directionnal. You should
+definitely look what is best for your own case. The antenna build itself is in Bible and the Sketchup 
+file though, if you want to take a look.
+
+There is no build of materials. Mostly because this specific build is made using what I found in a
+pretty random fashion. Yes, I did buy the DAC, ADC, stepper, etc. but those are readily available in
+the same form I bought, and I am pretty sure you can substitute most of them for something similar
+and have similar results. Obviously, some adjustments will be needed, especially the STLs and the
+electrical components values. As I said, this is not a build guide, its for inspiration and for
+other mad folks that might stumble here trying to resolve a problem that is a part of my build.
 
 ## Credits
 
@@ -92,14 +108,20 @@ sheet and the Hardware Bible disagree, the Bible wins.
   handles Bluetooth audio.
 - My stupidity for making me do this and convincing myself that its a good idea.
 
-The factory schematic of the TM-838N is included for reference. The documents also cite the SAMS
-Photofact for this set, which is copyrighted and not included.
+The factory schematic of the TM-838N is included for reference, but note that it is superseeded 
+by the KiCad schematic. The documents also cite the SAMS Photofact for this set, which is 
+copyrighted and not included.
 
 ## Disclaimer
 
 I have barely coded anything in this. Its all been vibe-coded with Claude Code and Codex. The artwork,
 design, and anything other than sound and electrical engineering and the actual coding were done
 without AI, by me with the help of my friends and family.
+
+## Contributions
+
+You can open issues if you have questions and I'll try to help if I can, but don't count on me to 
+make this yours. I'll just help with what I can, if I can.
 
 ## License
 
