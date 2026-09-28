@@ -107,6 +107,7 @@ other mad folks that might stumble here trying to resolve a problem that is a pa
 - Phil Schatzmann, for the [ESP32-A2DP](https://github.com/pschatzmann/ESP32-A2DP) library that
   handles Bluetooth audio.
 - My stupidity for making me do this and convincing myself that its a good idea.
+- My wife and kids for putting up with me. Its done now, papa can come home.
 
 The factory schematic of the TM-838N is included for reference, but note that it is superseeded 
 by the KiCad schematic. The documents also cite the SAMS Photofact for this set, which is 
