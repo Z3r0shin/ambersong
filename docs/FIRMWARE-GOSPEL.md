@@ -5466,7 +5466,8 @@ an unchecked default and the gate is off.
 **When and evidence.** 2026-09-07.
 
 **6.4.21 The 50 kHz half-step is rounded away on storage, and kept that way.**
-**Decision.** `tuneF` stays in tenths; odd-twentieth answers round half up (a bias of about +25 kHz).
+**Decision.** `tuneF` stays in tenths; odd-twentieth answers round half up, so each is stored 50 kHz
+high (about +25 kHz on average over odd and even answers).
 **Why.** Changing it needs a settings-version bump; nothing on the radio showed a need. The fix is
 written in `sampleStore()`: store `tuneF` in twentieths (settings version bump, migration ×2) and
 fit on those.
@@ -5681,8 +5682,8 @@ happened here.
   station receivable where this radio lives. 97.2 + 10.6 = 107.8 MHz is one step from the real
   107.9 MHz top of the North American band, and a peak near 107.9 would still show. Left as it is;
   a firmware note (§12.1.1).
-- **50 kHz is lost on storage** (6.4.21): odd-twentieth results round half up, about +25 kHz
-  (§12.1.5).
+- **50 kHz is lost on storage** (6.4.21): odd-twentieth results round half up and are stored
+  50 kHz high, about +25 kHz on average (§12.1.5).
 - **The notches cost about a sixth of the window.** "NOTHING FOUND" at roughly one dial position in
   six is normal.
 - **The comb's source is unidentified.** One untested idea: harmonics of the A32's I2S bit clock
@@ -6284,7 +6285,7 @@ value makes the value unreadable); split at the first `=`; skip lines without on
 | `tunerEndsSet` | Whole integer 0..3, applied at once. | REFUSED and named. |
 | `bandLow`, `bandHigh` | Whole integer 500..2000 (x0.1 MHz), applied at once. | REFUSED and named (refused, not clamped). |
 | `tuneOffset10` | Whole integer -200..200 (x0.1 MHz), **held** with the marks. | The whole tuning block is refused: "TUNING CALIBRATION REFUSED - the hand-offset line is unreadable; the stored calibration was kept". |
-| `tuneUsed` | Integer, decimal or `0x` hexadecimal (a console dump once printed it in hexadecimal), 0..0xFFFF, held. | Ignored with no note; every mark line after it is then skipped. |
+| `tuneUsed` | Integer, decimal or `0x` hexadecimal (a console dump once printed it in hexadecimal), 0..0xFFFF, held. | Ignored with no note of its own; every mark line after it is then skipped. If the file has a `tuneOffset10` line (every exported file does), the block is refused with the misleading "the file announced 0 and 0 parsed"; without one, nothing is said (§12.3.8). |
 | `tuneMark<i>` | Only after a `tuneUsed` line. `i` a whole decimal 0..11 (`tuneMarkA` is not accepted: it is what someone writes after reading the console dump, which labels the hand slots A, B, C, and a loose parse read it as slot 0, so mark A could silently receive another mark's numbers with the mask still agreeing); value `<pos>,<freq>`, pos within +/-1,000,000, freq 870..1085; held. | Skipped silently; the mask check then refuses the block. |
 | `wifiTxQ`, `autoConnect` | **Retired keys** (2026-09-25): skipped whatever the value, not counted, not named, so a file saved by an older firmware uploads cleanly. | - |
 | `spurUsed` | Integer 0..16, held. | Spoils the fixed-feature block. |
@@ -6894,8 +6895,10 @@ failed write at the A32's confirmation.
    (`sys.getcfg`) refreshes it. Bench only (§12.4.11).
 6. The knob-set volume is never touched, so it reaches flash only when something else is saved,
    and the knob's first reading overrides it at boot anyway.
-7. An unreadable `tuneUsed` line is ignored without a note, so every mark line after it is skipped
-   silently (§12.3.8). The retired keys `wifiTxQ` and `autoConnect` are skipped without a note, by
+7. An unreadable `tuneUsed` line is ignored without a note of its own, so every mark line after it is
+   skipped. An exported file then gets the misleading refusal "the file announced 0 and 0 parsed",
+   because its `tuneOffset10` line triggers the block's check; a file without that line gets no
+   word at all (§12.3.8). The retired keys `wifiTxQ` and `autoConnect` are skipped without a note, by
    design.
 8. Merge, not replace: an upload cannot return a setting to its default by leaving it out (except
    the two blocks, through their count keys).
@@ -8360,7 +8363,7 @@ chapters; they are listed so the endpoint is complete.
 |---|---|---|---|---|
 | `bt.play` `bt.pause` `bt.next` `bt.prev` | guest | — | Bluetooth transport command to the A32 | 10 |
 | `bt.disconnect` | guest | — | Drop the Bluetooth source | 10 |
-| `bt.pair` | guest | — | Open the pairing window | 10 |
+| `bt.pair` | guest | — | Open the pairing window; the A32 acts only on the Bluetooth source, but the answer is "pairing window open" on any source (§12.4.4) | 10 |
 | `bt.forget` | admin | — | Drop every pairing | 10 |
 | `needle.stop` | admin | — | Stop the needle | 5 |
 | `needle.home` | admin | — | Home (refusal says why) | 5 |
@@ -10421,8 +10424,12 @@ static memory and already inside the budget.
 (`ESP.getFreeHeap()` in the S3's state builder). It says nothing about the A32; no A32 heap figure
 reaches the portal at all. The A32's console `s` line prints `ESP.getFreeHeap()`, the free internal
 heap in general, which is not the same as what a plain `malloc()` or a DMA allocation can get.
-Before spending RAM on the A32, read `esp_get_free_heap_size()` and
-`heap_caps_get_largest_free_block(MALLOC_CAP_DMA)` on the A32's own USB console.
+No console key and no portal field prints the A32's `esp_get_free_heap_size()` or its largest DMA
+block (`heap_caps_get_largest_free_block(MALLOC_CAP_DMA)`) today. The only reading of the first is
+the A2DP library's own "Available Heap" lines while Bluetooth starts at boot; nothing prints the
+second. So the ~24 KB of 2026-09-11 is the only recorded figure (§12.5.6). Before spending RAM on
+the A32, read both on the A32's own USB console, which for the DMA block takes a build that prints
+it.
 
 ### 10.2.15 Telemetry and diagnostics
 
@@ -10964,7 +10971,7 @@ When and evidence. 2026-09-25.
 
 | what fails | what the firmware sees | what it does | how to recover | ladder class |
 |---|---|---|---|---|
-| RAM spent past the ~24 KB free (for example 16 DMA buffers) | nothing; `Update.begin()` fails with error 0, Bluetooth refuses connections | refuses every update | USB reflash only | **BLOCKER** (USB-only) |
+| RAM spent past the ~24 KB free (measured 2026-09-11; for example 16 DMA buffers) | nothing; `Update.begin()` fails with error 0, Bluetooth refuses connections | refuses every update | USB reflash only | **BLOCKER** (USB-only) |
 | a future change writes `tx_sd_out_delay` (or the BCK/LRCK out-delays) with audio live; nothing in v.1.0.3 can | nothing | 1 or 3: silence; **2: full volume** through the amplifier | write 0; the speakers are at risk | **BLOCKER** (harm) |
 | data-line drive set to 0 or 1 | nothing | the line may mis-decode for long stretches | set 2 or 3, or reboot | DEFECT |
 | I2S install fails at boot | `[FAIL]` on the USB console | no audio task; silence | reboot; if it persists, reflash | DEFECT |
@@ -11077,7 +11084,8 @@ matched silent control from round one.
   tuner chip sees at multiples of 2.8224 MHz (harmonics 28 to 34 match within one sweep step); that
 is a hypothesis, and the one-variable test (stop
   I2S for about 90 s during a sweep) needs a small A32 hook that was never written (§12.1.7).
-- No A32 heap figure reaches the portal. The only reliable number is on the A32's USB console.
+- No A32 heap figure reaches the portal. The only reliable number is on the A32's USB console, and
+  no key prints it on demand (§12.5.6).
 - `sys.bttx` resets at every boot, like every experiment, so the boot value is always 0 dBm.
 - The `autoConnect` byte is kept in `ProtoBtCfg` and read by nothing (10.3.1, §12.4.3).
 - A reboot or an update of the A32 makes one pop of its own: the I2S clocks stop, the DAC goes to
@@ -11090,9 +11098,11 @@ is a hypothesis, and the one-variable test (stop
 - The `OTA_BEGIN` wait is a fixed 400 ms; a fade-out above about 340 ms makes every update start
   with a click (§12.5.1).
 - The portal action `bt.pair` sends a message named `MSG_BT_LOOK`, but it opens the pairing window
-  (`BT_LINK`) (§12.4.4).
-- Console `s` reads and resets the peak meter, the ring high-water mark and the I2S latches, so the
-  portal misses those values for one period (§12.5.4).
+  (`BT_LINK`). It opens it only on the Bluetooth source, yet the portal answers "pairing window
+  open" on any source (§12.4.4).
+- Console `s` reads and resets the peak meter (with its clip flag) and the ring high-water mark, so
+  the portal misses those values for one period. It also clears the I2S latches, but the portal
+  reads `i2sSticky`, which nothing clears (§12.5.4).
 
 ---
 
@@ -11119,15 +11129,20 @@ is a hypothesis, and the one-variable test (stop
   handshake, and with it the update relay to the A32 (chapter 9). New message ids are backward
   compatible.
 - Readbacks come from the hardware, never from a copy.
-- Read-and-reset counters (`getPeaks()`, `getRms()`, `btRingFill()`, `i2sFaults()`) have one reader:
-  the 250 ms state message. `zeroWatch()`, `gainWatch()` and `i2sSticky` are monotonic and safe to
+- Read-and-reset counters (`getPeaks()`, `getRms()`, `btRingFill()`) should have one reader: the
+  250 ms state message. Today the console `s` also reads `getPeaks()` and `btRingFill()`
+  (§12.5.4). `i2sFaults()` is read and cleared by the console `s` alone; the state message sends
+  `i2sSticky` instead. `zeroWatch()`, `gainWatch()` and `i2sSticky` are monotonic and safe to
   read anywhere.
 - `i2sFaults()` clears only the bits the driver does not service (masked against `int_ena`). An
   earlier version cleared everything and could lose the driver's buffer-done events, blocking the
   audio task forever (2026-09-01).
 
 **The heap.** Before spending any RAM, read `esp_get_free_heap_size()` and
-`heap_caps_get_largest_free_block(MALLOC_CAP_DMA)` on the A32's USB console. Budget about 0.7 KB of
+`heap_caps_get_largest_free_block(MALLOC_CAP_DMA)` on the A32's USB console. No key prints them
+today (console `s` prints only `ESP.getFreeHeap()`; the library's boot lines give only the first),
+so add the print in the same build, and do not trust the ~24 KB of 2026-09-11 for a build that has
+grown since (§12.5.6). Budget about 0.7 KB of
 DMA RAM per millisecond of chain depth. A +32 KB request was fatal once and only USB recovered it.
 
 **The update wait.** If you raise `fadeOutMs` above about 340 ms, or deepen the DMA chain, raise the
@@ -11317,7 +11332,7 @@ clock-error mute. The root cause is still open (10.2.16).
 | Commit | What and why |
 |---|---|
 | 2026-09-12 | Pop-hunt telemetry reaches the portal. A diagnostic message was retired after it sent the radio to full volume. |
-| 2026-09-12 | Clock pads at full drive become the boot default. The audio DMA buffers stay at 8, because 32 KB more would exceed the roughly 24 KB of heap really free on the A32. |
+| 2026-09-12 | Clock pads at full drive become the boot default. The audio DMA buffers stay at 8, because 32 KB more would exceed the roughly 24 KB of heap really free on the A32 (measured 2026-09-11). |
 | 2026-09-12 | The A32 answers the new settings; its fade wait before an update goes from 250 to 400 ms. |
 | 2026-09-12 | The rescue access point becomes reachable and checkable, a required item before v.1. |
 
@@ -11708,12 +11723,13 @@ when the ends are not measured (or when the shaft lies outside them).
 ### 12.1.5 A sample is stored to 100 kHz, so half the fine pass is rounded away
 
 **What happens.** The fine pass measures the oscillator in 50 kHz steps, but a sample is stored in
-tenths of a MHz (`tuneF`). The station frequency in twentieths is halved with rounding up, so an
-odd-twentieth result lands about 25 kHz high: an oscillator at 95.05 or at 95.10 MHz both store
-105.7 MHz with the default IF.
+tenths of a MHz (`tuneF`). The station frequency in twentieths is halved with rounding up
+(`station10 = (station20 + 1) / 2`), so an odd-twentieth result is stored 50 kHz high and an even
+one exactly: an oscillator at 95.05 or at 95.10 MHz both store 105.7 MHz with the default IF. Over
+both cases the average bias is about +25 kHz.
 
-**Why it was left.** The error is a quarter of a channel step, and the dial reads true. It is noted
-here with its fix.
+**Why it was left.** The error is at most half a channel step (a quarter on average), and the dial
+reads true. It is noted here with its fix.
 
 **Where.** `sampleStore()` in src/s3/main.cpp (the `station10` line).
 
@@ -12058,19 +12074,28 @@ answer also carries a `warn`, the page shows only the warning, not the count.
 
 **Class.** NOTE.
 
-### 12.3.8 An unreadable `tuneUsed` line drops the marks silently
+### 12.3.8 An unreadable `tuneUsed` line gives a misleading warning, or none
 
 **What happens.** In a settings file, the `tuneUsed` line announces which sample slots follow. If
-that line cannot be read, it is skipped without a note, and every mark line after it is then
-skipped too. The file still uploads, and the stored marks are kept, but the page does not say that
-the file's marks were ignored.
+that line cannot be read, it is skipped without a note of its own, and every mark line after it is
+then skipped too. The stored marks are kept. What the page then says depends on the rest of the
+file:
+
+- **A file the portal exported.** Every exported file carries a `tuneOffset10` line, which alone is
+  enough to trigger the tuning block's refusal. So the page does warn, but misleadingly: "TUNING
+  MARKS REFUSED - the file announced 0 and 0 parsed; the stored calibration was kept". The file
+  announced marks; the firmware simply could not read how many.
+- **A file with no `tuneOffset10` line** (written by hand, for example). Nothing triggers the
+  refusal, and the page says nothing about the marks at all.
 
 **Why it was left.** Not yet addressed. Nothing stored is lost.
 
-**Where.** The `tuneUsed` branch of `settingsFromText()` in src/s3/settings_table.h.
+**Where.** The `tuneUsed` branch and the tuning-block commit at the end of `settingsFromText()` in
+src/s3/settings_table.h.
 
-**Starting point.** Return a `warn` ("the tuneUsed line could not be read - the file's samples were
-not applied"), as the fixed-feature lines already do through `spBad`.
+**Starting point.** Remember that a `tuneUsed` line was seen but unreadable, as the hand-offset line
+already does (`mkOffBad`), and refuse the block with its own words ("the tuneUsed line could not be
+read - the file's samples were not applied").
 
 **Class.** NOTE.
 
@@ -12236,14 +12261,16 @@ all of them, so it may be wanted; the label is what is loose.
 
 ### 12.3.18 `sys.quiet` casts its argument unchecked
 
-**What happens.** Nothing in practice. `doAction()` passes `sys.quiet`'s number through
+**What happens.** Nothing in practice. `doAction()` passes `sys.quiet`'s number, a `float`, through
 `(uint16_t)arg`. For values of 65536 and above that conversion is undefined in C++; on this compiler
-65536 becomes 0, which `Net::quiet()` then treats as its 1 s minimum. `Net::quiet()` caps every value
-at 600 s, so nothing longer can happen.
+65536 becomes 0, which `Net::requestQuiet()` then turns into its 1 s minimum. `Net::quiet()`, which
+carries the request out, has no minimum of its own; it caps every value at 600 s, so nothing longer
+can happen.
 
 **Why it was left.** Harmless.
 
-**Where.** `doAction()` in src/s3/settings_table.h; `quiet()` in src/s3/net.cpp.
+**Where.** `doAction()` in src/s3/settings_table.h (the cast); `requestQuiet()` (the 1 s minimum)
+and `quiet()` (the 600 s cap) in src/s3/net.cpp.
 
 **Starting point.** Clamp `arg` to 0..600 before the cast.
 
@@ -12324,17 +12351,23 @@ its size matches exactly, so any size change puts that structure back to its def
 
 ### 12.4.4 `MSG_BT_LOOK` opens the pairing window
 
-**What happens.** Nothing visible. The portal's "Pair a new device" (`bt.pair`) sends a message named
+**What happens.** The portal's "Pair a new device" (`bt.pair`) sends a message named
 `MSG_BT_LOOK`, and the A32 answers it by opening the pairing window, the state named `BT_LINK`, not
-`BT_LOOK`. The behaviour is right; only the names disagree, which misleads anyone reading the code.
+`BT_LOOK`. Only the names disagree, which misleads anyone reading the code.
+
+There is also a visible part. The A32 acts on `MSG_BT_LOOK` only when its source is Bluetooth, but
+the portal always answers "pairing window open". On the radio or AUX source that answer is false:
+nothing opens.
 
 **Why it was left.** Renaming a message touches both boards and the protocol header.
 
-**Where.** `MSG_BT_LOOK` in include/proto.h; the `bt.pair` action in src/s3/settings_table.h;
-`onMessage()` in src/a32/main.cpp.
+**Where.** `MSG_BT_LOOK` in include/proto.h; the `bt.pair` action of `doAction()` in
+src/s3/settings_table.h; the `MSG_BT_LOOK` case of `onMessage()` in src/a32/main.cpp.
 
 **Starting point.** Rename the message (for example `MSG_BT_PAIR`). The value stays the same, so the
-protocol does not change and `PROTO_VERSION` does not need a bump.
+protocol does not change and `PROTO_VERSION` does not need a bump. For the answer: have `bt.pair`
+refuse with "switch to Bluetooth first" when the A32's reported source (the state frame's `source`)
+is not Bluetooth.
 
 **Class.** NOTE.
 
@@ -12450,10 +12483,15 @@ arrived by an update, it is on trial, so it refuses any new update, and only a r
 it back) gets out. The announcement is true only for an image flashed by USB, which is not on
 trial.
 
+The same fault is in the self-test failure line that `setup()` prints on the A32's USB console at
+boot: "link and OTA kept up so this build can be replaced". On trial, the update is refused (the
+`MSG_OTA_BEGIN` case of `onMessage()`), so the build cannot be replaced that way. Found 2026-09-28.
+
 **Why it was left.** The behaviour (never confirmed, rolled back by the next reset) is accepted.
 Only the words are wrong.
 
-**Where.** The `protoBroken` block in `loop()` and `confirmTick()` in src/a32/main.cpp.
+**Where.** The `protoBroken` block in `loop()`, the self-test failure in `setup()` and
+`confirmTick()` in src/a32/main.cpp.
 
 **Starting point.** When the image is on trial, announce "reboot the audio board to go back to the
 previous firmware" instead.
@@ -12467,19 +12505,20 @@ its own and would print "[WARN] PROTOCOL MISMATCH". The framer drops every frame
 before it reaches that code, so the line can never print. The wrong-version counter (12.4.1) does
 that job.
 
-**Why it was left.** Harmless dead code, kept as a guard.
+**Why it was left.** Harmless dead code, kept as a guard. The code already says so: a comment above
+the check calls it "A GUARD THAT CANNOT FIRE TODAY" and explains why.
 
 **Where.** The `MSG_HELLO_ACK` case of `onMessage()` in src/s3/main.cpp.
 
-**Starting point.** Remove it, or keep it and say in the code that it is a guard for a framer that
-one day accepts other versions.
+**Starting point.** Only removal remains open, if the guard is ever judged not worth keeping.
 
 **Class.** NOTE.
 
 ### 12.4.14 The battery clock's temperature is sent and not used
 
 **What happens.** Nothing visible. Every `MSG_TIME` carries the DS3231's temperature (`tempC4`). The
-A32 prints it in its boot report; the S3 never reads it.
+A32 prints it once, in the banner that `setup()` writes to its own USB console (the `bootReport()`
+line sent to the S3 carries no temperature); the S3 never reads it.
 
 **Why it was left.** Not yet addressed.
 
@@ -12603,14 +12642,19 @@ per block. The 15 s timeout is far above the longest stall seen (12.5.2).
 
 ### 12.5.4 The A32's console `s` steals the portal's readings
 
-**What happens.** The A32's console `s` reads the peak meter, the ring's high-water mark and the I2S
-latches, and reading them resets them. The state frame sent to the S3 reads the same values, so the
-portal misses them for one period after each `s`.
+**What happens.** The A32's console `s` reads the peak meter with its clip flag
+(`Audio::getPeaks()`) and the ring's high-water mark (`Audio::btRingFill()`), and reading them
+resets them. The state frame sent to the S3 reads the same two, so the portal misses them for one
+period after each `s`.
+
+`s` also reads and clears the I2S latches (`Audio::i2sFaults()`), but that does not reach the
+portal: the state frame sends `i2sSticky`, a separate copy that the audio task accumulates and
+nothing clears.
 
 **Why it was left.** `s` is a bench key, reachable only with a USB cable on the A32.
 
 **Where.** The `s` case of the key handler in `loop()` of src/a32/main.cpp; `Audio::getPeaks()` and
-`Audio::i2sFaults()` in src/a32/audio.cpp.
+`Audio::btRingFill()` in src/a32/audio.cpp.
 
 **Starting point.** Give the console a read that does not reset (a "peek"), and leave the resetting
 read to the state frame.
@@ -12636,6 +12680,26 @@ src/a32/audio.cpp.
 the one still pending.
 
 **Class.** NOTE. The class of each path if it fails is in chapter 10, section 10.5.
+
+### 12.5.6 No live A32 heap figure
+
+**What happens.** Nothing visible. The A32's free heap is its tightest budget (chapter 10, 10.2.14),
+and the one figure the Gospel gives, about 24 KB, was measured once, on 2026-09-11. No console key
+and no portal field prints the A32's `esp_get_free_heap_size()` or its largest free DMA block
+(`heap_caps_get_largest_free_block(MALLOC_CAP_DMA)`) today. The console `s` prints only
+`ESP.getFreeHeap()`, which is not what a plain allocation or a DMA allocation can get. The A2DP
+library prints `esp_get_free_heap_size()` on the USB console while Bluetooth starts at boot, and
+nowhere else; the portal's `heap` field is the S3's. Found 2026-09-28.
+
+**Why it was left.** Not yet addressed; recorded as a report with no fix chosen yet.
+
+**Where.** The `s` case of the key handler in `loop()` of src/a32/main.cpp; the state frame built in
+the same file.
+
+**Starting point.** Print both figures in the console `s` line. Carrying them in `ProtoState` too
+would put them on the portal; a new field goes at the end of the structure (chapter 10, 10.8).
+
+**Class.** NOTE.
 
 ---
 
@@ -12882,4 +12946,143 @@ runs under a tight deadline (chapter 10), so measure the task's time per block a
 before and after. The pop hunt showed how much this chain cares about timing.
 
 **Class.** Not a fault.
+
+## 12.9 Code tidy found 2026-09-28
+
+A 2026-09-28 review of the code, at S3 v.1.0.5 and A32 v.1.0.4, found the items below. None
+changes what the radio does. They are recorded here as notes, with no fix yet chosen. Each item is
+one line: what is wrong, where, and the fix in a few words. One text that belongs to an existing
+note was added to it instead: the A32's self-test failure line at boot, in 12.4.12. The same review
+corrected 12.1.5, 12.3.8, 12.3.18, 12.4.4, 12.4.13, 12.4.14 and 12.5.4, and added 12.5.6.
+
+### 12.9.1 Code comments that contradict the code
+
+**What happens.** Nothing on the radio. These comments say something the code does not do. A
+reader who trusts them is misled; the code is right.
+
+- The comment on the stereo bits (`gBinST`) in src/s3/rda.cpp says "See isStereoBin()"; no such
+  function exists, it is `binStereo()`. Fix: rename it in the comment.
+- The broadcast comment in the fine pass of `rdaTask()` (src/s3/rda.cpp) says "see candidate()"; it
+  is `bestCandidate()`. Fix: rename it in the comment.
+- `requestSweep()` in src/s3/rda.cpp says "three of the five known fixed features" lie outside the
+  LO window; the window's comment in src/s3/rda.h lists four (98.7, 101.6, 104.4 MHz and the
+  76.2 MHz band edge). Fix: make the two agree.
+- `readAs5600()` in src/s3/needle.cpp says the gap warning "still says 'nearest turn' either way"; it
+  prints "on the turn inside the tuner's ends" (12.1.4). Fix: correct the comment with 12.1.4's fix.
+- `setMicro()` in src/s3/needle.h says `moving` is the division used for homing; no homing path
+  (`startHoming()`, `beginReindex()`, `homingTick()`) selects a division, so a home started from
+  TRACKING runs at the resting division, `microSlow`. The comment above `coilRelease()` in
+  src/s3/needle.cpp already says the division is set only for a sweep, tracking and a park. Fix:
+  correct the header, or have homing select `moving` if that was the intent.
+- `calFinishBand()` in src/s3/needle.cpp says `cfg.idx*` "is never written by anything"; `loop()` in
+  src/s3/main.cpp now writes them from `calTakeBand()`. Fix: put the comment in the past tense.
+- The comment on the band snapshot at the top of src/s3/needle.cpp says `applySettings()` runs
+  `setIndexCal(0,0,0,0)`; that is true only before a band calibration has been saved. Fix: say "with
+  the stored values, zero before the first band is saved".
+- `updateDisplay()` in src/s3/main.cpp says "The timezone is set ONCE, by Net::begin()"; it is also
+  set by `Net::setNtp()`, by `startNtp()` (`configTzTime()`) in src/s3/net.cpp, and by the console
+  `W` (`setClockInteractive()`). Fix: list the setters.
+- The `B` case of the console handler in src/s3/main.cpp says its list has an 80 level "applied as
+  60"; the list has no 80, and after 8 it wraps round to 60. Fix: drop the sentence.
+- `settingsDump()` in src/s3/main.cpp calls its `wifiTxQ` line "BYTE-FOR-BYTE WHAT settingsToText
+  WRITES"; the settings file no longer carries `wifiTxQ` (12.3.9). Fix: say the line is for reading
+  only.
+- The comment above `settingsDump()` speaks of "one-pair lines from dialLow on"; the `dialLow` line
+  carries two pairs (`dialLow` and `dialHigh`). Fix: "from tuneOffset10 on", or split the line.
+- The join-failure comment in `Net::loop()` (src/s3/net.cpp) says "This file opens with 'THE RADIO
+  MUST NEVER BECOME UNREACHABLE'"; that text opens src/s3/net.h. Fix: name net.h.
+- The comment on the `data-a` click handler in data/portal.html says `tune.drop` uses "the same
+  frequency prompt"; it has its own slot-number prompt. Fix: say so.
+- The "THE TWO KNOBS" comment in src/a32/audio.cpp says the `sd_out_delay` function "remains only
+  for the A32's own USB console"; the setter and its key are gone, and only the read-back
+  `sdOutDelayIs()` is left. Fix: say only the read-back remains.
+- The comment above `zeroWatch()` in src/a32/audio.cpp says "Every other counter in this file resets
+  on read"; `btUnderruns()` and `gainWatch()` do not. Fix: name the ones that do.
+- The comment above the `[ZDD]` announcements in `loop()` of src/a32/main.cpp calls "a pop is
+  predicted HERE" in the text below stale; that text is no longer there. Fix: drop the reference.
+
+**Why it was left.** Found after the releases. Not yet fixed. Comments do not change the image, so
+they can wait for the next change to the code.
+
+**Where.** The functions and files named in each item.
+
+**Starting point.** Correct them in one comment-only commit, proved by stripping the comments and
+comparing with the previous commit, as for 12.6.5.
+
+**Class.** NOTE.
+
+### 12.9.2 Console and portal texts that say something false
+
+**What happens.** A person reading these texts is told something that did not happen. None of them
+changes what the radio does.
+
+- **The portal's Firmware card** says "The needle parks and the display goes dark while an update
+  writes". `portalOtaQuiet()` in src/s3/main.cpp stops the needle where it is; a park is a different
+  move. Fix: "The needle stops and the display goes dark".
+- **The console keys `B`, `o` and `O`** (src/s3/main.cpp) print "saved" ("known, saved", "the clear
+  is saved"). They only mark the settings changed (`settingsTouch()`); the write follows about 2 s
+  later once the needle is still, and never while the image is on trial or the settings are locked.
+  Fix: print "will be saved", as the settings path decides.
+- **The console key `i`** (src/s3/main.cpp) prints "OWN ACCESS POINT" and the rescue access point's
+  name whenever the S3 is not joined, also during a join or a radio silence when no access point is
+  up: `Net::ssid()` in src/s3/net.cpp returns that name whenever the S3 is not joined. Fix: print the
+  real state (joining, silent, or access point up).
+- **`hNetSet()`** in src/s3/portal.cpp always answers "network saved - the radio joins it in a few
+  seconds", also for a request that carries only the NTP server and time zone. The page always sends
+  the network name (12.3.12), so only a direct call to the API sees it. Fix: answer by what was set.
+- **The console keys `q` and `v`** (src/s3/main.cpp) refuse with "see the RDA state in 's' (running,
+  absent, or lost)", but `requestSweep()` in src/s3/rda.cpp also refuses a request lying wholly
+  outside the LO window, which leaves nothing in `s` to see. `v` reaches it when the dial sits
+  outside the window. Fix: have `requestSweep()` give its reason.
+- **The A32's line "[ZDD] DAC left analogue mute"**, printed by `loop()` in src/a32/main.cpp, states
+  as a fact an event the code only models, from a theory the pop hunt excluded (chapter 10). Fix:
+  "[ZDD] a zero run long enough for the DAC's zero-data mute has ended".
+- **The A32's line "OTA wrote N bytes, crc ok"**, in the `MSG_OTA_END` case of `onMessage()` in
+  src/a32/main.cpp, prints "crc ok" also when the S3 sent no CRC and none was checked. Fix: print
+  "no crc sent" in that case.
+- **The A32's boot line "[PASS] clock pads at drive N"**, in `Audio::begin()` in src/a32/audio.cpp,
+  says PASS whatever `clockDriveIs()` reads back, also a value other than 3, or 0xFF when the three
+  pads disagree. Fix: print FAIL unless it reads 3.
+
+**Why it was left.** Found after the releases. Not yet fixed.
+
+**Where.** The functions and files named in each item.
+
+**Starting point.** Each fix is a change of words, or a small reason string passed back; see each
+item.
+
+**Class.** NOTE.
+
+### 12.9.3 Code defined and never used
+
+**What happens.** Nothing. These are defined and never used, so they mislead a reader into thinking
+something depends on them.
+
+- `R2_MONO` in src/s3/rda.cpp. Fix: remove it.
+- `Rda::fineRssi()` (src/s3/rda.h, src/s3/rda.cpp), so `gFineR` is written and never read. Fix:
+  remove both, or print it with the fine pass (12.1.6).
+- `Needle::getCalibration()`, `Needle::getIndexCal()` and `Needle::state()` (src/s3/needle.h,
+  src/s3/needle.cpp): no caller. Fix: remove them.
+- `DRV_FULL` in src/s3/drive.h: `Drive::setMode()` in src/s3/drive.cpp handles it, and nothing selects
+  it. Fix: remove it, or keep it as documentation, as for 12.2.7.
+- `Net::apVerified()`, `Net::isQuiet()`, `Net::quietLeft()` and `Net::ntpResync()` (src/s3/net.h,
+  src/s3/net.cpp). Fix: remove them.
+- `btStreaming` in src/a32/main.cpp: written by the Bluetooth audio-state callback and never read.
+  Fix: remove it.
+- `Audio::source()` (src/a32/audio.h, src/a32/audio.cpp) and `Rtc::present()` (src/a32/rtc.h). Fix:
+  remove them.
+- In include/link.h: `txDropped_` (counted, never read), `lastRxMs()`, and `peerProto()` with
+  `peerProto_` (the S3 reads the handshake's `protoVersion` directly). Fix: remove them, or print
+  `txDropped_` in the console `s`.
+- `ProtoFramer::overruns` in include/proto.h: counted, never read. Fix: remove it, or print it in the
+  console `s` beside the other link counters.
+
+**Why it was left.** Found after the releases. Not yet fixed. Unused code does not change the
+image's behaviour.
+
+**Where.** The files named in each item.
+
+**Starting point.** Remove them in one commit; the build then proves nothing used them.
+
+**Class.** NOTE.
 
