@@ -78,7 +78,7 @@ Failures are classed by what it costs to recover from them. Every failure table 
 
 - **The two computers.** The **S3** is the main board (ESP32-S3): clock, needle, lamps, WiFi and
   the portal. The **A32** is the audio board (ESP32): sound, Bluetooth and the real-time clock.
-- **Code references** name the function and the file — `homeTick()` in `src/s3/needle.cpp` —
+- **Code references** name the function and the file — `homingTick()` in `src/s3/needle.cpp` —
   never a line number, because line numbers move.
 - **Decisions** carry the date they were made, for example (2026-09-25).
 - **"The author"** is the person who built this machine.
