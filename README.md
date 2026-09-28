@@ -75,7 +75,7 @@ a tube radio. Hardware Bible §31.1 covers what that means in this build.
 docs/                    the Hardware Bible and the Firmware Gospel
 firmware/                the PlatformIO project for both boards
 hardware/schematics/     the KiCad project, a collated PDF file and the radio's factory schematic
-hardware/STLs/           the 76 printed parts (PLA, plus one TPU membrane) and a Sketchup project with all the parts
+hardware/STLs/           the 76 printed parts and a Sketchup project with all those parts
 photos/                  the finished radio, wow, such radio, mucho bueno
 ```
 
@@ -130,7 +130,7 @@ make this yours. I'll just help with what I can, if I can.
 - Hardware design files (KiCad, STL): CERN-OHL-S-2.0
 - Documentation: CC BY-SA 4.0
 - Photos and renders: CC BY-NC-ND 4.0
-- The running hare on the dial: all rights reserved. It's family imagery, not for reuse.
+- The running hare : all rights reserved. It's family imagery, not for reuse.
 
 Apart from the photos and the hare, you can use any of it, change it and share it, commercially
 too, as long as what you share stays under the same license. Details and exceptions are in [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
