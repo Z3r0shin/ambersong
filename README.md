@@ -1,3 +1,6 @@
+![Ambersong powering up](photos/Ambersong%20-%20Power%20Up%20Animation.gif)
+
+
 # Ambersong
 
 *An old soul, glowing anew into the modern world.*
