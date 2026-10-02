@@ -2585,7 +2585,7 @@ C43, C46, C47–C49 and M1. The terminal identifiers of L5, L6, L8–L14 and S1A
 - **AC_FUSE_OUT** — The fused output of M1 feeds the top of the heater string (50C5 V7 heater pin 4), the neon limiter R32, R29 and C44. M1's other end meets S2 unit 2 (Power switch) OUT pin to pin. S2 unit 2 IN is on AC1 with J3 'AC conductor LIVE'. In the radio J3 takes the switched live (AC_L) through the external EMI filter, with no isolation transformer.
   - members: V7@35.56,172.72 H #4, R32 #1, M1 #2 (0.75A fuse, outside group), R29 #1 (28Ω 3W rectifier surge limiter, outside group), C44 #1 (0.01uF switched-line-to-chassis bypass, X1Y2 rated, outside group)
   - source: the tube radio sheet; the author
-- **CHASSIS (same net as AC2)** — The bottom of the heater string (V2 heater pin 4, since the two 12DT8s are interchanged there), both 12DT8 shield pins 9 and the three heater bypass capacitors return to CHASSIS. The lamps' returns are drawn there too, but the bulbs are absent. CHASSIS is the sheet's circuit common, drawn as one net with AC2 / J4. In the radio J4 takes the neutral (AC_N) through the external EMI filter, with no isolation transformer, so CHASSIS is on neutral. COAX_SHIELD_PE is on Earth and reaches CHASSIS only through C51. CHASSIS is never bonded to Earth or the Faraday cages.
+- **CHASSIS (same net as AC2)** — The bottom of the heater string (V2 heater pin 4, since the two 12DT8s are interchanged there), both 12DT8 shield pins 9 and the four heater bypass capacitors (C47, C48, C49, C52) return to CHASSIS. The lamps' returns are drawn there too, but the bulbs are absent. CHASSIS is the sheet's circuit common, drawn as one net with AC2 / J4. In the radio J4 takes the neutral (AC_N) through the external EMI filter, with no isolation transformer, so CHASSIS is on neutral. COAX_SHIELD_PE is on Earth and reaches CHASSIS only through C51. CHASSIS is never bonded to Earth or the Faraday cages.
   - members: V2@52.07,185.42 H #4, V1@27.94,185.42 SH #9, V2@52.07,185.42 SH #9, C47 #2, C48 #2, C49 #2, C52 #2, NE1 #2 (drawn; bulb absent), NE2 #2 (drawn; bulb absent), NE3 #2 (drawn; bulb absent), J4 #1 'AC conductor NEUTRAL' (via AC2), plus the sheet's other CHASSIS members
   - source: the tube radio sheet; the author
 
@@ -2759,7 +2759,7 @@ that the statement itself does not name, the part reference comes from the drawi
 - Volume pot at the A32 end: one cable carries A_IO35 + CABLE S/FTP; another carries GND + A_VDC.
 - Polarized capacitors are correctly polarized as drawn. Capacitors not drawn as polarized are film or ceramic.
 - PC817 (power detect): +20V → 4.7 kΩ → LED anode; LED cathode → 20V_GND; collector → GPIO1; emitter → GND.
-- J42: on both ends, in all the sheets, GND and/or CABLE S/FTP are only on the sleeve of the TRS.
+- J42 (now J51): on both ends, in all the sheets, GND and/or CABLE S/FTP are only on the sleeve of the TRS (2026-09-13). Since 2026-09-16 the output side also has its ring (RAD_L) on GND; the cable side is unchanged: shield and foil on the sleeve, RAD_L on the ring, RAD_R on the tip (§6).
 - J10 is deliberately "a coax connector": it was F-type and is now a BNC male; the type does not matter.
 - The antenna on ANT (any FM/VHF antenna works; the author made one for this) is §29, as built and installed.
 - A Faraday cage over the AC LINE FILTER, between the tube radio's mains input and Ambersong's AC input (after the front power switch), is bonded to the same earth. Not drawn.
