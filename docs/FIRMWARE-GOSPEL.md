@@ -3458,9 +3458,11 @@ Nothing is corrected while a calibration runs, because the calibration is measur
 these same edges. Crossings during a jog are not scored either: a jog runs with the
 emitter suspended and the supervisor skips everything after its bring-up branch.
 
-40 is just under half the ~79 hs gap between the forward and reverse ON edges - the
-one systematic error that could masquerade as drift - so a crossing read in the
-wrong direction can never be absorbed. The 79 hs gap is a physical value of this
+40 is about half the ~79 hs gap between the forward and reverse ON edges - the
+one systematic error that could masquerade as drift - and in fact half a half-step
+above it (79 / 2 = 39.5). So a crossing read in the wrong direction is absorbed only
+if the needle had already drifted about 39 hs or more the other way; with less, it
+is refused as a slip. The 79 hs gap is a physical value of this
 machine, held by the firmware (§5.9). The ladder built on it is 5.4 D8.
 
 ### 5.2.13 The band check
@@ -4494,7 +4496,7 @@ band calibration (§12.2.8).
    soft limits.
 5. `PROVISIONAL_LIMIT_HS` stays above about half the index band's width, so the post-home
    sweep crosses the band.
-6. `CORRECT_MAX_HS` stays below half the forward/reverse ON offset.
+6. `CORRECT_MAX_HS` stays at about half the forward/reverse ON offset or below (40 against 79 / 2 = 39.5 on this machine).
 7. The debounce must fit: `(K − 1) × 5 ms` above the glitch you reject, and `2 × K` polls
    inside the narrowest ON region at the fastest speed near the index. Raise `upVmax` or
    `dnVmax`, or change the magnet, and recompute K.
@@ -4628,7 +4630,7 @@ may want it re-tuned by eye.
 | Travel between the two mechanical stops | 1869 hs (about 164 degrees of the motor's output shaft, at 0.088 degree per hs) | `HOME_BUDGET_HS = 2336` (1869 + 25 %), src/s3/needle.cpp | compiled | Measured on this machine before 2026-09-03; first used on 2026-09-03 | Jog from stop to stop and read `pos`. Depends on it: `HOME_BUDGET_HS`, `MEM_POS_SANE_HS` (6000: the travel plus a whole search, with room). |
 | Where the index sits in the travel | 1195 hs above the low stop, 674 hs below the high stop; near 102.5 MHz on the printed dial, so listening below that never crosses it | the homing comments and budgets, src/s3/needle.cpp | compiled | Measured with the travel | Read `pos` at each stop after a home. Depends on it: the backoff and re-approach budgets (each runs one way, and neither may reach a stop), `PROVISIONAL_LIMIT_HS`. The index must be mid-travel for anything in this chapter to work. |
 | The index band: the four switching edges | onFwd 0, offFwd 97, onRev 79, offRev −15 (2026-09-03) | `idxOffFwd`, `idxOnRev`, `idxOffRev` settings; `idxOnFwd` 0 by definition | measured (band calibration, 5.2.15); compiled defaults 0 | The band calibration on this machine, 2026-09-03 | Run the band calibration (portal "Calibrate the index", console `k`) with the needle on the switch. Nothing needs re-deriving by hand except the constants in the next three rows. |
-| Offset between the ON edges seen moving + and moving − | about 79 hs (earlier estimates said 67) | `CORRECT_MAX_HS = 40`, src/s3/needle.cpp | compiled | From the band calibration above | Keep `CORRECT_MAX_HS` below half your offset, so a crossing read in the wrong direction is never absorbed (5.2.12). |
+| Offset between the ON edges seen moving + and moving − | about 79 hs (earlier estimates said 67) | `CORRECT_MAX_HS = 40`, src/s3/needle.cpp | compiled | From the band calibration above | Keep `CORRECT_MAX_HS` at about half your offset or below, so a crossing read in the wrong direction is absorbed only on top of a drift that size already (5.2.12). |
 | Narrowest ON region (reverse ON to reverse OFF) | 94 hs | `IDX_DEBOUNCE_K = 4`, src/s3/needle.cpp | compiled | From the band calibration above, crossed at 1700 hs/s (the park): about 55 ms, 11 polls | Re-derive K: `(K − 1) × 5 ms` above the glitch you reject, and `2 × K` polls inside the narrowest region at your fastest speed near the index (5.2.8). |
 | How far outside the band the switch may still read ON | 30 hs plus 40 ms of travel | `BAND_MARGIN_HS = 30`, src/s3/needle.cpp | compiled | Chosen from the debounce lag at speed plus room (2026-09-24) | Re-check against your band and speeds; too small raises false slips, too large misses real ones. |
 | Homing hops and budgets | backoff hops 20 hs, clearance 60 hs, budget 400; re-approach hops 10 hs, budget 300 | `homingTick()`, `HOME_BACKOFF_BUDGET_HS`, `HOME_REAPPROACH_BUDGET_HS` | compiled | Derived from the band and the index position above (about twice and 2.4 times the worst case) | Re-derive from your band width; each budget must stay shorter than the distance to the stop it faces. |
@@ -6456,8 +6458,8 @@ motion defaults are the settings arrived at on a bench test rig; they are this b
 | `fallMs` | 1000 | ms (u16) | 10..5000, step 10 | Fall envelope, fall. | S3 | `amb3/cfg` | P-A, F |
 | `dwellUpMs` | 100 | ms (u16) | 0..3000, step 25 | Hesitation before rising. | S3 | `amb3/cfg` | P-A, F |
 | `dwellDnMs` | 1000 | ms (u16) | 0..3000, step 25 | Hesitation before falling. | S3 | `amb3/cfg` | P-A, F |
-| `microFast` | 16 | 1/n (u8) | 1..32 | Microstep divisor for sweeps, parks and homing, and for the needle sitting at the park (portal label "Microstep while moving"). | S3 | `amb3/cfg` | P-A, F |
-| `microSlow` | 32 | 1/n (u8) | 1..32 | Microstep divisor while tracking the tuner (portal label "Microstep at rest"). | S3 | `amb3/cfg` | P-A, F |
+| `microFast` | 16 | 1/n (u8) | 1..32 | Microstep divisor for sweeps, parks and homing, and for the needle sitting at the park (portal label "Microstep while moving", which misleads: it also holds the parked needle, which is not moving). | S3 | `amb3/cfg` | P-A, F |
+| `microSlow` | 32 | 1/n (u8) | 1..32 | Microstep divisor while tracking the tuner (portal label "Microstep at rest", which misleads: the code calls tracking "resting" (`useMicro(bool resting)`, needle.cpp), so this is the divisor for a needle that moves with the knob, and a parked needle uses `microFast`). | S3 | `amb3/cfg` | P-A, F |
 | `reapHsps` | 60 | hs/s (u16) | 10..500, step 10 | Creep speed of the index-band calibration (portal label "Measuring pass speed"); also the portal jog speed. Not the homing re-approach. | S3 | `amb3/cfg` | P-A, F |
 | `posMin` | -300 | hs from the index (i32) | -3000..3000 | Low soft limit. The pair must bracket the index (0) and not cross; `Needle::setGeometry()` refuses any other pair and the old one is written back. The row's range is wide on purpose, so that a wrong value is refused by `setGeometry()` rather than silently stored as a bound. Purged to -300..+300 at boot if corrupt. | S3 | `amb3/cfg` | P-A, F, C3 `m`, X `needle.limitLow`, X `needle.nudge` (moves both), Auto (band calibration shifts it; boot purge) |
 | `posMax` | +300 | hs from the index (i32) | -3000..3000 | High soft limit. Same rules. | S3 | `amb3/cfg` | P-A, F, C3 `M`, X `needle.limitHigh`, X `needle.nudge`, Auto |
@@ -8438,7 +8440,7 @@ Keys owned by other chapters are listed for completeness.
 | `T` `t` | Track the tuner | 5 |
 | `P` `p` | Park | 5 |
 | `x` `X` | Stop the needle; also aborts a running calibration | 5 |
-| `A` | Abort a running calibration (the only key that does) | 5 |
+| `A` | Abort a running calibration, and nothing else (`x` and the portal's STOP abort one too, and also stop the needle) | 5 |
 | `k` `K` | Calibrate the index band, 5 passes (needle on the sensor first; the portal button uses 3) | 5 |
 | `n` / `N` | Nudge −20 / +20 half-steps, slow | 5 |
 | `m` / `M` | Set soft limit LOW / HIGH here | 5 |
