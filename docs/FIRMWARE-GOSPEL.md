@@ -583,7 +583,7 @@ The firmware lives in `firmware/`. This Gospel describes the S3 at the git tag `
 (2026-09-27), which changed only the S3, and the A32 at the tag `v.1.0.4`
 (2026-09-26), which changed only the A32. The release line began with `v.1.0` on
 2026-09-25; `v.1.0.1` and `v.1.0.2` followed the same evening, and `v.1.0.3`
-the next morning (§3.2.10). Besides a README and a `.gitignore`, these are all of its files; `src/s3/` builds
+the next morning (§3.2.10). Besides a README, a `.gitignore` and this Gospel, these are all of its files; `src/s3/` builds
 into the S3's program and `src/a32/` into the A32's, while `include/` is compiled into both.
 
 | File | What it holds | Read |
@@ -1727,7 +1727,7 @@ describes the S3 at tag `v.1.0.5` (2026-09-27); `v.1.0.4` changed only the A32, 
 `v.1.0.5` changed only the S3's rescue access point (chapter 8), so nothing in this chapter differs
 from `v.1.0.3` (2026-09-26).
 
-Before v.1.0, MAJOR stayed at 0 until the machine was finished.
+Before v.1.0, MAJOR stayed at 0: v.1 meant the firmware fully calibrated, OTA confirmed, and every outstanding problem resolved.
 
 The build environment `[env:s3]` in `platformio.ini` uses the `esp32-s3-devkitc-1` board definition,
 `memory_type = qio_opi`, the `default_16MB.csv` partition table (two 6.25 MiB (0x640000-byte) application slots, so the S3
@@ -2088,8 +2088,9 @@ machine seem to decide rather than react. `Panel::level()` and `Panel::target()`
 
 ### 4.2.12 During a firmware upload
 
-The portal calls `portalOtaQuiet(true)` when an upload to either microcontroller starts (chapter 8). It
-stops the needle and blanks the display. While `otaQuiet` is set:
+The portal calls `portalOtaQuiet(true)` when an upload of the S3's own image starts (chapter 8). It
+stops the needle and blanks the display. An A32 update relayed through the S3 does not: the S3 is
+not writing its own flash then, so the needle and the display carry on (§9). While `otaQuiet` is set:
 
 - `updateDisplay()` is not called, so the digits stay blank;
 - the panel lamps are driven dark;
@@ -2233,7 +2234,7 @@ visible without a cable.
   DIFFERENT PROTOCOL VERSIONS - flash both".
 - **Same protocol version, different status layout.** A status frame that passes its checksum but fails
   to parse (wrong length) means the two builds disagree on the frame. `onMessage()` then clears
-  `haveState` and prints once: "the A32's STATE frame does not match this build. Flash BOTH MCUs."
+  `haveState` and prints once: "the A32's STATE frame does not match this build. Flash BOTH MCUs. Audio is unaffected - only telemetry stops."
 
 **A short A32 restart.** An A32 restart shorter than the 2 s silence rule is detected by the A32's own
 millisecond counter going backwards in its status frames (with a guard against that counter's own
@@ -2703,7 +2704,7 @@ Classes follow the recovery ladder of §0.5 (BLOCKER, DEFECT, NOTE).
 |---|---|---|---|---|
 | A32 link silent more than 2 s | `gLink.peerAlive()` false | Drops the handshake; source read as AUX (needle parks, panel to "other", mode-2 readout off); software clock runs on `millis()`; no DS3231 resync and no NTP write-through (both need the handshake); forgets its copy of the A32's settings, so portal edits of audio-board rows get HTTP 409 "the audio board is not answering - its settings cannot be changed now" and a settings download writes n/a for them (chapter 7); `W` sets this board only and says so; HELLO every 1 s; console "[WARN] A32 silent. Clock and needle keep running." | Automatic on the A32's HELLO_ACK, which also fetches its settings again. | NOTE |
 | A32 restarted in under 2 s | Its millisecond counter goes backwards | Re-handshakes; re-reads version, time and settings. | Automatic. | NOTE |
-| The boards run different protocol versions | Frames dropped by the framer, counted as `badVer` | Looks like a silent link; `s` shows `wrong-version N` and "flash both"; portal pill "BOARDS RUN DIFFERENT PROTOCOL VERSIONS - flash both". | Flash both boards. | NOTE (audio unaffected) |
+| The boards run different protocol versions | Frames dropped by the framer, counted as `badVer` | Looks like a silent link: no handshake, so the A32 sleeps and the radio is silent (§9.5); `s` shows `wrong-version N` and "flash both"; portal pill "BOARDS RUN DIFFERENT PROTOCOL VERSIONS - flash both". | Flash both boards (§9.8.1). | BLOCKER (survives a power cycle once the A32 is confirmed) |
 | The boards run incompatible builds of the same protocol version | Status frames fail to parse | `haveState` cleared; one warning "Flash BOTH MCUs"; audio unaffected. | Flash both boards. | NOTE (telemetry only) |
 | DS3231 invalid (oscillator stopped, or never set) and no NTP | `MSG_TIME` with valid = 0 | "[WARN] the DS3231 has no valid time yet." every minute; `rtc` = 1 and the pill "BATTERY CLOCK LOST ITS TIME - check its battery"; digits blank if the S3 never had a valid time. | NTP once joined (heals itself), or `W` by hand; either write clears the flag. Check the module's battery. | NOTE with a network; otherwise needs `W` |
 | DS3231 does not answer | No `MSG_TIME` within 5 s of a 60 s `MSG_GET_TIME` (the A32 logs its own read failure) | S3 keeps its software clock; `rtc` = 2 and the pill "BATTERY CLOCK NOT ANSWERING". | Hardware (Bible §5). | NOTE |
@@ -3042,7 +3043,8 @@ busy-spins by design; neither is the portal task.
   settings. Internally they are fine units per second (`hspsToFine()`).
 - **Position `gPos` and target `gTarget`** are 32-bit signed fine positions. They are
   32-bit on purpose: the Xtensa CPU has no atomic 64-bit load, and these are read on
-  one core while written on the other. The whole travel is about ±410 000 fine, so
+  one core while written on the other. The whole travel is 1869 hs, about 478 000 fine (positions from about −306 000 to
+  about +173 000), so
   32 bits has room to spare. Arithmetic that multiplies a position casts to 64 bits
   where it happens (2026-09-24).
 - **Zero** is the index switch's **forward ON edge**: the point where it switches on
@@ -3568,7 +3570,7 @@ creep moves until the switch says stop and cannot know the distance in advance; 
 profiled move would mean a fresh dwell and acceleration ramp every few steps. So the
 emitter has a constant-speed mode (`manualRun()`, the "manual" speed of 5.2.5) that
 overrides the profile entirely; the jogs use it too. At 60 hsps the sampling lag of
-5.2.12 is about 0.3 hs, which is why these edges can serve as the reference that
+5.2.12 is about 0.15 hs on average (half of the 0.3 hs travelled between two 5 ms polls), which is why these edges can serve as the reference that
 faster crossings are scored against.
 
 Positions are the back-dated edge snapshots, the same ones homing uses. The portal
@@ -4013,8 +4015,10 @@ settled on 2026-08-30: `wn` 9, `zeta` 0.50 gave about 5 degrees of overshoot and
 peak at about 15 % of travel, a long trickle, and landed exactly. Measured step
 throughput at 1700 hsps: 1/8 and 1/16 delivered 100 %, 1/32 delivered 92 % (clamped).
 Worst step jitter on the rig was 5 to 10 us (measured with no motor attached).
-1/32 was kept for slow motion because it is smoother exactly where smoothness shows:
-the knob being followed, and the long trickle at the end of a fall. The firmware
+On the rig, 1/32 was kept for slow motion because it is smoother exactly where smoothness shows:
+the knob being followed, and the long trickle at the end of a fall. The firmware keeps it for the
+first only: tracking runs at 1/32 (`microSlow`), and the sweep and the park run at 1/16
+(`microFast`; `useMicro()` in src/s3/needle.cpp). The firmware
 before the rig swept at 850 hsps on a trapezoid, about 2.8 s for a full sweep; the rig
 existed because that shape read as a machine and that speed was far below what the
 motor could do.
@@ -4100,7 +4104,7 @@ Why: before 2026-09-08 a drift over 40 hs set a flag, printed "re-home with H", 
 nothing else. There was no path back inside the window, so the needle ran on against
 a frame it knew was wrong - and the serial console is normally unplugged, so in
 practice until the next power cycle. It was a ratchet, not an accumulation: on
-2026-09-07 the needle was 394 hs out after 16 h 40 min of ordinary use (about 24 hs
+2026-09-08 the needle was 394 hs out after 16 h 40 min of ordinary use (about 24 hs
 an hour), every slip since the first one that exceeded 40.
 Absorbing a large drift trusts a suspect number and shifts the frame by it;
 re-indexing uses it only as a direction hint and takes the new zero from the switch.
@@ -4321,7 +4325,7 @@ power switch. NOTE: recovers by itself, or cosmetic.
 | AS5600 stops answering | I2C error | count frozen, needle holds, retry every 2 s, re-seat on return | nothing when it returns; wiring otherwise (Bible §11) | NOTE |
 | shaft turn ambiguous after a long outage or at boot | re-seat | with both tuner ends measured: the one turn inside them | measure both tuner ends | NOTE with ends measured; without them a wrong turn can be saved and inherited by every boot - BLOCKER class, cured by measuring the ends |
 | crossed or non-bracketing soft limits typed in | `setGeometry()` | refused, old pair kept, console warning | enter a valid pair | NOTE |
-| corrupt soft limits in flash | `purgeCorruptLimits()` | reset to ±300 and saved | home, band-calibrate, capture the limits again | guarded (would be BLOCKER) |
+| corrupt soft limits in flash | `purgeCorruptLimits()` | reset to ±300 and saved | home, band-calibrate, capture the limits again | BLOCKER (guarded: the needle stays off the stops, but the limits must be captured again) |
 | a creep in the band calibration reaches a soft limit | `stepAllowed()` | calibration fails and says so | move the limit, or accept | NOTE |
 | an S3 upload | upload start | needle stopped, display dark | wait | by design |
 | an upload refused, aborted, failed or silent for 15 s | upload hooks, `otaWatchdog()` | resume once the stop has landed | nothing | NOTE |
@@ -4566,7 +4570,8 @@ band calibration (§12.2.8).
   out-and-back at a fixed rate over many cycles (the real pull-out test), an unramped
   start (pull-in), an acceleration ladder, a many-turn run for the gear ratio, a
   thermal soak, and a backlash measurement (do that one early). Measure rates at the
-  moving division: at 1/32 every rate reads about 8 % low because of the 20 us floor.
+  moving division: at 1/32 any rate above about 1560 hsps is clamped by the 20 us floor (1700 hsps
+  reads about 8 % low).
 - **Build** both firmware environments with the pinned toolchain (`espressif32@7.0.1`)
   and check the build's exit code, not its output.
 - **Flash** only a board you have positively identified, and not while someone is
@@ -4806,8 +4811,8 @@ The whole chain, in order:
    steps in the same direction add up to 12. A reversal resets the sum, so sensor jitter never
    trips it.
 5. **The curve.** `tuneFreq10Raw(acc)` clamps `acc` to the fitted domain, evaluates the quadratic in
-   tenths of a MHz, and adds the hand offset `tuneOffset10`. A result that is not a number, or lies
-   outside 10 to 300 MHz, returns 88.1 MHz plus the offset. `tuneFreq10()` rounds to the nearest
+   tenths of a MHz, and adds the hand offset `tuneOffset10`. A curve value that is not a number, or
+   lies outside 10 to 300 MHz before the offset is added, returns 88.1 MHz plus the offset. `tuneFreq10()` rounds to the nearest
    tenth; `tuneFreq10f()` does not round. These three functions are the only place in the firmware
    that turns a shaft angle into a frequency.
 6. The needle follows a filtered copy of the angle (chapter 5). The sampler, the
@@ -5204,7 +5209,7 @@ oscillator plus that value.
 | AS5600 read period | 20 ms | needle.cpp | |
 | fit guards | ends within 50.0 to 200.0 MHz; span ≥ 2.0 MHz; quadratic monotonic | main.cpp `fitTuneCurve()` | |
 | unmeasured-ends pad | 30 % of the samples' span, at least 100 counts | main.cpp | |
-| NaN fallback | 88.1 MHz + offset; valid range 10 to 300 MHz | needle.cpp `tuneFreq10Raw()` | |
+| NaN fallback | 88.1 MHz + offset; valid range 10 to 300 MHz, tested on the curve before the offset | needle.cpp `tuneFreq10Raw()` | |
 | hand mark range | 87.0 to 108.5 MHz | settings_table.h `tune.mark` | |
 | nudge | ±0.1 to ±5.0 MHz per request, ±20 MHz total | settings_table.h `tune.nudge` | |
 | panel grid | 87.9 + 0.2 k MHz (odd tenths) | main.cpp `updateDisplay()` | FM channels of the Americas. |
@@ -5385,8 +5390,8 @@ measured, and the author confirmed it by ear. A five-sample fit on 2026-09-08:
      502      91.3      91.30    -0.00
 ```
 
-Worst residual 0.13 MHz, inside half a 0.2 MHz channel everywhere on the dial; a line through the
-same points was 2.4 times worse. The curve bends by about 0.54 MHz across the travel.
+Worst residual 0.13 MHz, about two-thirds of a 0.2 MHz channel, so where it exceeds 0.1 MHz the panel's
+snapped readout can show the neighbouring channel; a line through the same points was 2.4 times worse. The curve bends by about 0.54 MHz across the travel.
 **Rejected.** The straight line over permille; the two-point Mark A/B (6.6).
 **When and evidence.** 2026-09-04; 2026-09-07. The model is in the design of
 2026-09-04.
@@ -5887,7 +5892,7 @@ sits at the same address in both, so stored settings survive a partition-table c
 | board | namespace | key | holds | part of the settings system? |
 |---|---|---|---|---|
 | S3 | `amb3` | `cfg` | The whole `Settings` struct, 220 bytes, one blob. | Yes. |
-| S3 | `net` | `ssid`, `pass`, `ntp`, `tz` | The house WiFi network name and passphrase, the NTP server, the POSIX time-zone string. | No. Changed from the portal's Network card (`/api/net`) or the S3 console `y`. Not in the settings file. |
+| S3 | `net` | `ssid`, `pass`, `ntp`, `tz` | The house WiFi network name and passphrase, the NTP server, the POSIX time-zone string. | No. Changed from the portal's Network card (`/api/net`); the S3 console `y` sets `ssid` and `pass` only. Not in the settings file. |
 | S3 | `auth` | `users` | The portal accounts: names, salted SHA-256 password hashes, admin flags. | No. Changed from the portal's account cards. Not in the settings file. |
 | A32 | `amb` | `audio` | The `ProtoAudio` struct (15 bytes). | Yes. |
 | A32 | `amb` | `bt` | The `ProtoBtCfg` struct (12 bytes). | Yes. |
@@ -6142,8 +6147,9 @@ later (2026-09-24).
   until the knob is next moved, and the knob's position wins at every boot. The volume reaches
   flash only when something else causes a save.
 - **Bounds on the A32**: `Audio::setTaper` clamps the volume law to 10..40 and
-  `Audio::setBalance` to -100..100 when applying. Gains and fade times are not clamped here;
-  the S3 is the only remote sender and clamps first.
+  `Audio::setBalance` to -100..100 when applying, and the gains are clamped to -60..+30 dB
+  when converted (`db10ToQ16()` in src/a32/audio.cpp). Fade times are not clamped here (a zero
+  acts as 1 ms); the S3 is the only remote sender and clamps first.
 - During an A32 firmware update, `muted` is forced on and restored afterwards to what it was.
 
 ### 7.2.9 How the S3 proxies the A32's settings
@@ -6443,7 +6449,7 @@ motion defaults are the settings arrived at on a bench test rig; they are this b
 | `upVmax` | 1100 | hs/s (u16) | 100..4000, step 50 | Top speed of every second-order move, in either direction (portal label "Sweep up, top speed"). | S3 | `amb3/cfg` | P-A, F |
 | `upAccel` | 18000 | hs/s² (u16) | 1000..60000, step 500 | Acceleration of the same moves. | S3 | `amb3/cfg` | P-A, F |
 | `dnVmax` | 1700 | hs/s (u16) | 100..4000, step 50 | Top speed of the decay: the fall and the park. | S3 | `amb3/cfg` | P-A, F |
-| `dnAccel` | 18000 | hs/s² (u16) | 1000..60000, step 500 | Acceleration of the decay (chapter 5). | S3 | `amb3/cfg` | P-A, F |
+| `dnAccel` | 18000 | hs/s² (u16) | 1000..60000, step 500 | Used only by the park's arrival test; the decay law itself has no acceleration limit (chapter 5). | S3 | `amb3/cfg` | P-A, F |
 | `wn` | 9.0 | rad/s (f32) | 1..21, step 0.5 | Natural frequency of the second-order ring-down. | S3 | `amb3/cfg` | P-A, F |
 | `zeta` | 0.50 | none (f32) | 0.1..2.0, step 0.05 | Damping of the ring-down (overshoot). | S3 | `amb3/cfg` | P-A, F |
 | `riseMs` | 100 | ms (u16) | 10..3000, step 10 | Fall envelope, rise. | S3 | `amb3/cfg` | P-A, F |
@@ -6516,7 +6522,7 @@ frequencies. The tube set's FM oscillator runs below the station (low-side injec
 | `wifiTxQ` | S3, `amb3/cfg` | 8 (2.0 dBm) | The learned WiFi transmit power in raw quarter-dBm: the rung of the join ladder that last worked (chapter 8). The ladder tops out at 60 (15 dBm), a firmware choice: measured here on 2026-09-24, this board radiated nothing usable at 20 dBm. Printed by the console dump `D`; not in the portal and not in the settings file since v.1.0.2 (2026-09-25); an old file's `wifiTxQ` line is ignored. | Auto (copied from `net.cpp` every `loop()` pass), C3 `B` (cycles a list of powers) |
 | `autoConnect` | A32, inside the `amb/bt` blob | 0 | A field of `ProtoBtCfg` that nothing reads: the A32 always calls `set_auto_reconnect(false)`, so the radio never starts a Bluetooth connection. Kept in the struct so the wire and blob layouts do not change; no longer a row since v.1.0.2 (2026-09-25); an old file's `autoConnect` line is ignored. | nothing |
 | `potMin`, `potMid`, `potMax` | A32, `amb` keys | 60, 0 (= not measured), 3990 | Raw ADC readings of the knob at its minimum, mechanical centre and maximum; a three-point map to 0..255. Exported only as the comment `# potcal`. If max is not at least 65 above min, the defaults are used. | X `pot.min`, `pot.ctr`, `pot.max` (Audio tab), C32 `p`, `c`, `P` |
-| `ssid`, `pass`, `ntp`, `tz` | S3, `net` | empty, empty, a public NTP pool, a compiled time zone | The house network credentials and time settings. Never exported. | portal Network card, C3 `y` |
+| `ssid`, `pass`, `ntp`, `tz` | S3, `net` | empty, empty, a public NTP pool, a compiled time zone | The house network credentials and time settings. Never exported. | portal Network card (all four), C3 `y` (`ssid` and `pass` only) |
 | `users` | S3, `auth` | one administrator account with a compiled default password that the portal forces you to change | Portal accounts, salted and hashed. Never exported. | portal account cards |
 
 The pot defaults 60 and 3990 are the fallback readings of this machine's volume knob, about 60 raw
@@ -6787,7 +6793,7 @@ Classes use the recovery ladder of §0.5 (BLOCKER, DEFECT, NOTE).
 | Newer settings on flash (downgrade) | Our magic, unknown version | Downgrade lock: defaults in RAM, nothing written, download refused, pill shown. | Flash the newer firmware, or upload a complete file. | DEFECT |
 | Stored blob shorter than 100 bytes | Length check | Warning, defaults, no lock; the defaults are saved on the first change. | Upload a settings file. | BLOCKER (never seen) |
 | Header corrupted so `magic` differs | Magic mismatch in `settingsLoad()` | Read on the Version 1 layout, marked dirty and saved back as V7: the motion profile would be garbage. Not known: whether ESP-IDF's NVS checksums reject such a blob first, so that it reads as "no stored settings"; that is library behaviour, never tested here. | Upload a settings file. | BLOCKER (theoretical) |
-| Corrupt soft-limit pair at boot | Pair does not bracket 0 | Purged to -300..+300 and saved; console asks for recalibration. | Re-home, band calibration, set the stops. | DEFECT |
+| Corrupt soft-limit pair at boot | Pair does not bracket 0 | Purged to -300..+300 and saved; console asks for recalibration. | Re-home, band calibration, set the stops. | BLOCKER (guarded: the needle stays off the stops, but the limits must be captured again) |
 | Corrupt fixed-feature list at boot | Count or entry out of range | Emptied and saved. | Re-learn with the set switched off (C3 `o`). | DEFECT |
 | A file with valid but wrong values uploaded | Nothing | Applied and saved; it is the user's act. | Upload a good file. | DEFECT |
 | A truncated or damaged file uploaded | Missing or bad lines | What arrived is merged; the tuning and fixed-feature blocks are refused unless complete; everything refused is named. | Upload the file again. | NOTE |
@@ -6796,7 +6802,8 @@ Classes use the recovery ladder of §0.5 (BLOCKER, DEFECT, NOTE).
 | A32 falls silent after it had answered | The link stops hearing it; `haveCfg` is cleared | As the row above: 409 on A32 rows, `n/a` in a download, "NOT SENT" on an upload. Never exercised on the radio. | Restore the link; the next handshake fetches the settings again. | NOTE |
 | A32 restarts | New HELLO, or its uptime going backwards | Handshake again; the mirror is refreshed from the A32's flash. | Automatic. | NOTE |
 | An A32 update changes `ProtoAudio` or `ProtoBtCfg` | Stored length differs from the struct | That struct's settings reset to defaults and are saved on the next change (after an update over the air, not before the new image is confirmed). The pot calibration survives. | Upload a file exported before the update. | BLOCKER by design; avoidable by exporting first |
-| Boards on mismatched builds (half-flashed pair) | `ProtoFramer::as()` rejects on length; or, across a `PROTO_VERSION` change, every frame is dropped and counted | The A32 ignores `SET_AUDIO`/`SET_BT`; the S3 never gets `MSG_CFG` (the `n/a` path). A version mismatch shows as "wrong-version N" in console `s` and as the portal pill "BOARDS RUN DIFFERENT PROTOCOL VERSIONS - flash both". | Flash both boards. | DEFECT |
+| Boards on mismatched builds of the same `PROTO_VERSION` (half-flashed pair) | `ProtoFramer::as()` rejects on length | The A32 ignores `SET_AUDIO`/`SET_BT`; the S3 never gets `MSG_CFG` (the `n/a` path); the radio plays on the A32's stored settings. | Flash both boards. | BLOCKER (changing the audio board's settings does not hold, so a function is lost until a firmware update) |
+| Boards on different `PROTO_VERSION`s | every frame dropped and counted (`badVer`) | No handshake: the A32 sleeps and the radio is silent. "wrong-version N" in console `s`; portal pill "BOARDS RUN DIFFERENT PROTOCOL VERSIONS - flash both". | Flash both boards (§9.8.1). | BLOCKER (survives a power cycle once the A32 is confirmed) |
 | Reboot pressed with an unsaved change while the needle moves | Save refused | Needle stopped, save retried for 1.5 s; reboot refused with the reason if still unsaved; needle resumed. | Try again. | NOTE |
 | S3 update ends with an unsaved change that cannot be written | Force-flush false | Reboots anyway; warning on the USB console only. | Make the change again. | NOTE |
 | An S3 update that bumped `SETTINGS_VERSION` is rolled back | Nothing: the new image wrote nothing during its trial | The previous image reads its own blob normally; no lock. Closed by design since v.1.0.1. | - | NOTE |
@@ -7121,9 +7128,12 @@ HTTP downloads on core 0 kept the display's worst multiplex slot error under 100
 finished firmware measured 22 µs idle and 61 µs under eighteen hammering requests. The
 asynchronous web server library was never tried on this machine.
 
-**Why the server task always sleeps one tick.** A busy loop on core 0 starves that core's idle
-task, and the idle-task watchdog then reboots the machine. That is how an earlier needle emitter
-brought the board down on 2026-08-31. So `serverTask()` ends every pass with `vTaskDelay(1)`.
+**Why the server task always sleeps one tick.** A busy loop on core 0 starves every task below it
+on that core, the idle task included. On 2026-08-31 that let the idle-task watchdog reboot the
+machine, through an earlier needle emitter. Today core 0's idle task is no longer watched (the
+step emitter takes it off the watchdog, §5.2), so the delay no longer guards a reboot; it still
+gives the idle task and anything below the portal's priority on core 0 its time. So
+`serverTask()` ends every pass with `vTaskDelay(1)`.
 
 **The cost of this arrangement.** The needle's step emitter also runs on core 0, at priority 19,
 and does not yield during a move. So the portal is starved while the needle moves. It was
@@ -8056,13 +8066,13 @@ when the A32 came back. When and evidence: v.1.0.2, 2026-09-25. Not yet exercise
 | Forced AP, nobody comes | Hold expires | Goes home after 10 min | none | NOTE |
 | The phone joins the AP but does not open the page by itself | Nothing (the phone decides) | The DNS server and the redirect keep answering | Open `http://192.168.4.1/` by hand | NOTE |
 | Captive-portal DNS server fails to start | `gDns.start()` false; no "captive portal" line | Tries again on every pass of `Net::loop()` while the AP is up; the portal still answers at its address | Open `http://192.168.4.1/` by hand | NOTE (never seen) |
-| Blank board's AP at the bottom rung | No network name, so no failed join to climb the ladder | AP stays at 2.0 dBm | Move closer; or console `y` / `B` over USB | DEFECT at worst (console) |
+| Blank board's AP at the bottom rung | No network name, so no failed join to climb the ladder | AP stays at 2.0 dBm | Move closer; or console `y` / `B` over USB | NOTE if moving closer works; BLOCKER if only the USB console helps (§0.5) |
 | Portal dead, ping alive | TIME_WAIT pool exhausted | The page backs off to 30 s so the pool drains | Stop all traffic for 1–2 min, then try once; console `s` shows `loops`/`served` | NOTE |
 | Portal slow while the needle moves | Emitter at priority 19 on core 0 | Nothing (accepted) | Stop the needle, or wait | NOTE |
 | Page shows "no answer" | `/api/boot` failed | Retries 2, 4, 8, 15 s | Wait | NOTE |
 | Session expired | 401 | Sign-in form; polling stops | Sign in | NOTE |
 | Locked out | 5th failure from one address | 429 with seconds left, 1–64 min | Wait | NOTE |
-| Owner's password lost | — | Nothing on the portal can reset slot 0 | USB console `~` (erases **all** accounts, restores the placeholder) | DEFECT (needs the cable) |
+| Owner's password lost | — | Nothing on the portal can reset slot 0 | USB console `~` (erases **all** accounts, restores the placeholder) | BLOCKER (the administration is reachable only by USB, §0.5); the radio itself keeps playing |
 | S3 upload interrupted | "aborted", or 15 s of no chunks | Abort, un-park; needle back to work once its stop lands; the old image stays in its slot | Upload again | NOTE |
 | A32 upload interrupted | as above | `a32OtaAbort()` from the watchdog; mid-stream relay failures send no abort and the A32 stays muted about 20 s until its own timeout (accepted as harmless) | Upload again | NOTE |
 | Wrong image picked | Chip id | Refused before writing | Pick the other file | NOTE |
@@ -8427,7 +8437,7 @@ Keys owned by other chapters are listed for completeness.
 | `H` `h` | Home the needle | 5 |
 | `T` `t` | Track the tuner | 5 |
 | `P` `p` | Park | 5 |
-| `x` `X` | Stop the needle (does not stop a calibration) | 5 |
+| `x` `X` | Stop the needle; also aborts a running calibration | 5 |
 | `A` | Abort a running calibration (the only key that does) | 5 |
 | `k` `K` | Calibrate the index band, 5 passes (needle on the sensor first; the portal button uses 3) | 5 |
 | `n` / `N` | Nudge −20 / +20 half-steps, slow | 5 |
@@ -9532,6 +9542,7 @@ unplugging the set.
 | One corrupted frame | bad CRC | frame dropped, `badCrc` counts it | none | NOTE |
 | A corrupted length byte (value up to 1088) | the decoder swallows up to 1090 following bytes before hunting again | on the A32, where S3 traffic is about 14 bytes per second after the handshake, that is up to about 80 s of deafness: the A32 falls asleep, then wakes by itself | none | NOTE |
 | The S3 goes silent (restart, its own update, crash) | no valid frame for 2 s | asleep, amp state forgotten, phone paused and dropped, muted, Bluetooth dark; STATE still sent | automatic when the S3 returns and says the amp is on | NOTE (deliberate) |
+| Only the A32-to-S3 direction fails (the S3 still reaches the A32) | the S3: no frame for 2 s; the A32: nothing, the S3's HELLOs keep arriving | the S3 drops the handshake, the A32's state and its settings copy ("A32 silent"), shows the link pill red, treats the source as AUX (needle parks), keeps its own clock, refuses audio-board edits, and sends only HELLO each second (no `SET_SYS`, `PING` or `GET_TIME`). The A32 stays awake on the last amp state it was told, so the sound plays on and does not learn the amp going off (§12.4.18) | automatic when the line works again (the next HELLO is answered) | NOTE; a wiring fault, see Bible §3 |
 | The A32 goes silent, or restarts quickly | S3: no valid frame for 2 s, or the A32 clock goes backwards | S3 warns, `peerHello` and `haveState` cleared (and `haveCfg` too after 2 s of silence), portal shows the A32 fields as unknown, S3 clock keeps running from its last anchor, HELLO every second | automatic | NOTE |
 | Link cable faulty | one or both directions silent | as above, on the affected side | hardware (Bible §12) | - |
 | `ProtoState` length differs between the builds | `as()` refuses STATE | S3 shows unknown, warns once: "Flash BOTH MCUs. Audio is unaffected - only telemetry stops." | update the older board | NOTE |
@@ -10980,15 +10991,15 @@ When and evidence. 2026-09-25.
 | phone negotiates a rate other than 44.1 kHz | `onSampleRate()` | USB warning only; plays at the wrong pitch | none | NOTE |
 | phone clock drifts against the local 44.1 kHz | ring fill | ring slowly fills (drops) or empties (underruns) | none needed | NOTE |
 | S3 silent for more than 2 s | `peerAlive()` false | sleeps: mute, Bluetooth closed, `ampOn` forgotten | automatic when the S3 speaks and says the amp is on | NOTE (by design) |
-| stored knob calibration implausible | `hi ≤ lo + 64` | falls back to 60 / 3990, no centre | recalibrate with `pot.min`/`ctr`/`max` | DEFECT |
-| stored knob calibration plausible but wrong | nothing | the knob maps wrongly | recalibrate | DEFECT |
+| stored knob calibration implausible | `hi ≤ lo + 64` | falls back to 60 / 3990, no centre | recalibrate with `pot.min`/`ctr`/`max` | BLOCKER (guarded: the knob runs on 60 / 3990) |
+| stored knob calibration plausible but wrong | nothing | the knob maps wrongly | recalibrate | BLOCKER |
 | a disconnect request never lands | `btDropping` older than 3 s | warns on USB and to the S3 (`MSG_LOG`); lamp shows connected | none needed | NOTE |
 | a phone connected while asleep or out of BT mode | `btConnected` | pauses and drops it, retried every 3 s | none needed | NOTE |
 | protocol self-test fails at boot | `protoBroken` | muted, Bluetooth closed, link and update receiver kept up; says so every 10 s; never confirmed | image that arrived over the air: portal reboot of the A32, which rolls back (an update is refused while it is on trial); image flashed by USB: update to a good image (chapter 9) | DEFECT |
 | an update stops mid-transfer | no frame for 20 s | gives up, restores the user's mute | none needed | NOTE |
 | `fadeOutMs` set above about 340 ms | nothing | every update starts with a click | set it lower | NOTE |
 | `connectable` off | policy | Bluetooth fully closed; the pair button blinks the lamp but no phone can find the radio | turn it on | NOTE (by design) |
-| stored settings blob of another size | length check | defaults apply | set again from the portal | NOTE |
+| stored settings blob of another size | length check | defaults apply | set again from the portal | BLOCKER by design; avoidable by exporting first (7.5) |
 | a settings write to flash fails | a short NVS write | keeps the change unsaved, warns on USB and to the S3, retries 2 s later | none needed | NOTE |
 | a settings change made while the A32's image is on trial, then a restart before it confirms | `gImgOnTrial` | holds the change in RAM; the restart rolls the image back and the change is not kept | set it again | NOTE (by design) |
 | a portal edit of an audio row while the A32 is silent | the S3 has no settings copy | HTTP 409, "the audio board is not answering - its settings cannot be changed now" | wait for the handshake, then edit again | NOTE |
@@ -11298,9 +11309,9 @@ RDA5807M FM receiver chip that listens to the tube set's own local oscillator.
 
 | Commit | What and why |
 |---|---|
-| 2026-09-04 | The dial is a curve, not a line: the straight line was 1.4 MHz wrong at the bottom. The same day, bring-up Phase H proved that the tube set's oscillator can be heard and read (11.2). |
+| 2026-09-04 | The dial is a curve, not a line: a two-point line was exact at its marks and about 0.5 MHz out mid-band. The same day, bring-up Phase H proved that the tube set's oscillator can be heard and read (11.2). |
 | 2026-09-05 | RDA phase 1. |
-| 2026-09-07 | The radio measures its own dial; the curve becomes quadratic. The WiFi transmitter was held at 2.0 dBm, because at the time nothing could hear it at any higher power (measured 2026-09-07); the ceiling rose to 15 dBm on 2026-09-24 (Era 8). |
+| 2026-09-07 | The radio measures its own dial; the curve becomes quadratic: the straight line had been 1.4 MHz out at the bottom of the band. The WiFi transmitter was held at 2.0 dBm, because at the time nothing could hear it at any higher power (measured 2026-09-07); the ceiling rose to 15 dBm on 2026-09-24 (Era 8). |
 | 2026-09-07 | The RDA's results reach the portal. |
 | 2026-09-07 | The curve predicts a position it never measured (98.5 MHz), which shows the fit is not circular. |
 | 2026-09-07 | AFC off during measurements, and a stereo-pilot rejector. |
@@ -11540,9 +11551,12 @@ running tube set, answered three questions.
   one 100 kHz step. Then two blind reads, the author moving the dial without saying where: both
   correct, 107.3 MHz (margin +10 over the local noise floor) and 88.5 MHz (margin +6).
 
-Three lessons from Phase H are built into the firmware's self-calibration. Identify the
-oscillator by what moves between two sweeps, never by amplitude: a fixed spur at 79.0 MHz was
-louder than the oscillator at every one of five dial positions. Judge a rise against the local
+Three lessons from Phase H shaped the firmware's self-calibration. Never identify the oscillator
+by amplitude: a fixed spur at 79.0 MHz was louder than the oscillator at every one of five dial
+positions, and only moving the dial told them apart. The firmware takes that in one form: what does
+not move with the dial (the fixed features) is learned once, with the set off, and masked, so a loud
+fixed spur can never be chosen. It does not itself check that a peak moves between two sweeps
+(6.4.11). Judge a rise against the local
 noise floor, not a fixed threshold: a fixed +7 threshold missed the real +6 rise at the bottom
 of the dial. And a 40 ms sweep dwell was a defect, because the signal strength is read before
 it settles; 300 ms works. Coarse 100 kHz steps to find the oscillator, then fine 50 kHz steps
@@ -11575,8 +11589,8 @@ eye, before any of it went into `needle.cpp`. These values were settled on the r
 Why micro-stepping depends on activity: the step emitter has a 20 µs floor, so 50,000 steps
 per second is a hard ceiling. At 1700 half-steps/s, 1/16 needs 27,200 steps/s and delivered
 100 %; 1/32 needs 54,400 and delivered 92 %. But 1/32 is smoother where smoothness shows, in
-slow motion. Measurements run at the moving division, because at 1/32 every rate reads about
-8 % low.
+slow motion. Measurements run at the moving division, because at 1/32 any rate above about
+1560 hsps is clamped (1700 hsps read about 8 % low).
 
 The rig also found four motion bugs that had the same shape in the firmware: a step deadline
 never recomputed as the profile accelerated (an s-curve emitted one step and sat still); linear
@@ -11608,7 +11622,7 @@ Every note has the same parts:
   been tried.
 - **Class:** the recovery ladder of §0.5. **NOTE** means it recovers by itself, or it is only
   cosmetic. **DEFECT** means it recovers with a portal reboot, a console reset or the front switch.
-  No note in this chapter is a BLOCKER.
+  One note in this chapter is a BLOCKER: 12.4.1.
 
 Everything here was checked against the code at tag `v.1.0.3` for the S3 and
 tag `v.1.0.4` for the A32, and brought up to `v.1.0.5` for the
@@ -12305,7 +12319,8 @@ path while wrong-version frames are arriving. The A32 would then stay on trial a
 next reset. This removes the one-board-at-a-time path, so the protocol procedure in chapter 9 would
 need another way.
 
-**Class.** DEFECT. Recovery is an update of the S3 built with the A32's version, then of both boards
+**Class.** BLOCKER: the radio stays silent through a power cycle once the A32 has confirmed itself (9.5).
+Recovery is an update of the S3 built with the A32's version, then of both boards
 together. No cable is needed.
 
 ### 12.4.2 Without the A32 at boot, the S3 never takes NTP time
@@ -12579,6 +12594,24 @@ For the clock pills, a test build of the A32 that reports an invalid time, or do
 `MSG_GET_TIME`.
 
 **Class.** NOTE. The class of each path if it fails is in chapter 9, section 9.5.
+
+### 12.4.18 A one-way link failure leaves the A32 on a stale amp state
+
+**What happens.** If only the A32-to-S3 direction fails, the S3 hears nothing, drops the handshake
+and from then on sends only HELLO, once a second. The A32 still receives those HELLOs, so for it the
+S3 is alive and it stays awake on the last amp state it was told: the sound plays on, and if the amp
+is switched off it never learns it (Bluetooth stays connectable on the Bluetooth source). Everything
+recovers by itself when the line works again. Never seen on the radio.
+
+**Why it was left.** Not yet addressed; it needs a broken wire to happen.
+
+**Where.** The link keep-alive block of `loop()` in src/s3/main.cpp (`SET_SYS` and `PING` are sent
+only while handshaken); `serviceWake()` in src/a32/main.cpp (awake = amp on and `peerAlive()`).
+
+**Starting point.** Have the A32 count only `SET_SYS` (not HELLO) as "the S3 is talking", or have
+the S3 keep sending `SET_SYS` while it is trying to handshake.
+
+**Class.** NOTE.
 
 ---
 
