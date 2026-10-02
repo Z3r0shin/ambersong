@@ -28,10 +28,12 @@ ESP32-A2DP library to one commit. Do not update either without re-testing everyt
 ## Everything else
 
 Flashing, the first boot, the portal, updates over the air, recovery, every setting and the reason
-behind each design decision are in the Firmware Gospel, [`../docs/FIRMWARE-GOSPEL.md`](../docs/FIRMWARE-GOSPEL.md).
+behind each design decision are in the Firmware Gospel: the [Human Readable edition](../docs/Ambersong%20-%20Firmware%20Gospel%20-%20Human%20Readable.pdf)
+([chapters](../docs/human/firmware-gospel/)) or the complete [LLM edition](../docs/llm-edition/FIRMWARE-GOSPEL.md).
 Start with its chapter 3 to build and flash from a clean PC, and its chapter 1 if the radio
 misbehaves. What each pin is wired to is in the Hardware Bible,
-[`../docs/HARDWARE-BIBLE.md`](../docs/HARDWARE-BIBLE.md).
+the [Hardware Bible](../docs/Ambersong%20-%20Hardware%20Bible%20-%20Human%20Readable.pdf)
+([chapters](../docs/human/hardware-bible/), [LLM edition](../docs/llm-edition/HARDWARE-BIBLE.md)).
 
 Pins, sensor directions, the tuner's travel and the needle's limits are those of the author's
 radio. Expect to change them for yours: the Gospel says where each one lives.

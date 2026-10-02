@@ -3063,7 +3063,7 @@ The tube radio facts are quoted from the page each evidence line names; not all 
 - **12DT8: Differs from the 12AT7 in heater and heater-cathode ratings, interelectrode capacitances and basing arrangement, so a 12AT7 pinout cannot be assumed** — describes the named tube or part type, not a measurement of the fitted one.
   - evidence: https://nj7p.org/Tubes/SQL/Tube_query.php?Type=12DT8 — "Except for heater and heater-cathode ratings, interelectrode capacitances, and basing arrangement, these types are identical with 12AT7."
 - **12DT8: Heater 12.6 V, 0.15 A (TDSL table); the pinout is shown as an image only** — describes the named tube or part type, not a measurement of the fitted one.
-  - evidence: https://tdsl.duncanamps.com/show.php?des=12DT8 — table cells "Vh V" / "12.6" and "Ih A" / "0.15"; "12DT8 Pinout" "![pinout](basing/9de.gif)"
+  - evidence: https://tdsl.duncanamps.com/show.php?des=12DT8 — table cells "Vh V" / "12.6" and "Ih A" / "0.15"; "12DT8 Pinout" "`![pinout](basing/9de.gif)`"
 
 ### Tube radio — T2: FM local oscillator and AFC (V2, 12DT8)
 
