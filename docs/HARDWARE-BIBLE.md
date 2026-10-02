@@ -768,7 +768,7 @@ One row per module pin as drawn on the main sheet, in drawn order, with the auth
 - **GND (opto)** — PC817 p4/4 (emitter) is on GND.
   - members: U6.p4/4 (emitter) (label on pin)
   - source: the main sheet
-- **A_IO35 (drawn A_IO34 until 2026-09-23; SC6 done)** — The volume pot RV4's wiper goes to the A32's GPIO35.
+- **A_IO35 (drawn A_IO34 until 2026-09-23; SC6 done)** — The volume pot RV4 (Value B10K on the main sheet) has its wiper on the A32's GPIO35.
   - members: RV4.2 (wiper), U10 pin 35 (A32, by label)
   - source: the main sheet; SC6; the author; firmware (§0)
 - **A_VDC (= A_3V3)** — Pot end 1 is on A_VDC, which sheet HERE (the star-point buses) names A_3V3 as well; on the main sheet A_3V3 is the A32's 3V3 pin.
@@ -2785,7 +2785,7 @@ that the statement itself does not name, the part reference comes from the drawi
 - The tube pin assignments and the heater string order as drawn were checked on the chassis.
 - Coil and switch terminal identifiers (L5, L6, L8–L14, S1A–S1G) are logical, not physical lugs.
 - T1 has a two-terminal primary and a secondary, no tap.
-- Of the drawn lamp and antenna-input parts, only the neon bulbs NE1–NE3 and J2 are absent from the device; R32, the S1E contacts, C21, L6, C22A, L7 and C23A are fitted. What SP1 and SP2 are is not known, so whether they are in the device is not recorded.
+- Of the drawn lamp and antenna-input parts, only the neon bulbs NE1–NE3 and J2 are absent from the device; R32, the S1E contacts, C21, L6, C22A, L7 and C23A are fitted. SP1 and SP2 are the factory's two loudspeakers in series, drawn only in the sheet's ORIGINAL section (§19). In this machine T1's secondary feeds the 7.5 Ω load and the ADC (§6), so no speaker is on it. Whether the original speakers are still in the cabinet is not recorded.
 - Mains and earth: J3 takes the switched live (AC_L) and J4 the neutral (AC_N), through the external EMI filter, with no isolation transformer, so CHASSIS is on neutral; the coax shield (COAX_SHIELD_PE) is on Earth and reaches CHASSIS only through C51; CHASSIS is never bonded to Earth or the Faraday cages.
 - C1A–C1C are three Rubycon 47 µF 315 V capacitors; C44 and C51 are X1Y2 rated; **C3 is X1Y1**.
 - C11 is a shunt from AFC_C to chassis in the radio, and always was; the sheet once drew it in series by mistake. C2's polarity is as drawn.
@@ -3290,7 +3290,7 @@ Coordinates are sheet millimetres; handles are the drawn reference text.
 - **Build details beyond §31:** wire colours (except the amp supply's four, §30), pin-1 sides, crimp/JST housings, individual
   cable lengths and cable routing, the screws of the PLA plates, and the contact order inside a connector. The printed parts
   are §31.7.
-- **The tube radio's speakers SP1/SP2**, drawn in the section the sheet calls ORIGINAL, are not recorded as fitted or absent.
+- **Whether the tube radio's original speakers SP1/SP2 are still in the cabinet.** They are on no circuit (§22).
 - **The original documents** (the factory schematic and the SAMS schematic and parts tables) are scans. Their values reach
   this document only through the tube radio sheet's hidden Spec fields and text notes.
 - **RTC datasheet facts** are not included (see §24).
@@ -3336,7 +3336,7 @@ reviewed (he corrected the conductor spacing, the earth lug and the boom profile
 ### 29.2 Feedline, earth and mounting
 
 - **Feedline:** coax, **at least 100 ft at present**, to be about **50 ft total** at its final place, bulkhead to the radio.
-- **Earth:** **8 AWG stranded copper, ferruled, to the Hydro-Québec meter box**, landed **on a lug on the meter base,
+- **Earth:** **8 AWG stranded copper, ferruled, from the grounding block to the Hydro-Québec meter box**, landed **on a lug on the meter base,
   beside one an electrician made for the external wiring**.
 - **Grounding block:** fitted outside, out of the weather; its exact position does not matter.
 - **Mast:** the same 3030 extrusion as the boom, **4 ft high**, fixed with continuous aluminium extrusion on the roof; the mast is
