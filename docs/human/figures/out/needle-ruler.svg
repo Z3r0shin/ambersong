@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 170" font-family="Segoe UI" font-size="12">
+<rect width="100%" height="100%" fill="white"/>
+<line x1="50" y1="85" x2="630" y2="85" stroke="black" stroke-width="2"/>
+<rect x="416.2" y="75" width="34.8" height="20" fill="#e3eefc" stroke="#2a5db0"/>
+<text x="433.6" y="62" text-anchor="middle" font-weight="bold">index switch (zero)</text>
+<text x="433.6" y="115" text-anchor="middle">edges −15 … +97 · near 102.5 MHz</text>
+<text x="340" y="160" text-anchor="middle" fill="#555">travel 1869 half-steps (hs) · + is toward high FM</text>
+<line x1="50.0" y1="68" x2="50.0" y2="102" stroke="black" stroke-width="3"/>
+<text x="50.0" y="115" text-anchor="start" font-weight="bold">low stop</text>
+<text x="50.0" y="130" text-anchor="start">−1195</text>
+<line x1="62.1" y1="72" x2="62.1" y2="98" stroke="black" stroke-width="1.5"/>
+<text x="62.1" y="25" text-anchor="start" font-weight="bold">low soft limit · park position</text>
+<text x="62.1" y="42" text-anchor="start">−1156 · 87.9 MHz</text>
+<line x1="549.3" y1="72" x2="549.3" y2="98" stroke="black" stroke-width="1.5"/>
+<text x="549.3" y="25" text-anchor="middle" font-weight="bold">high soft limit</text>
+<text x="549.3" y="42" text-anchor="middle">+414 · 107.9 MHz</text>
+<line x1="630.0" y1="68" x2="630.0" y2="102" stroke="black" stroke-width="3"/>
+<text x="630.0" y="115" text-anchor="end" font-weight="bold">high stop</text>
+<text x="630.0" y="130" text-anchor="end">+674</text>
+</svg>

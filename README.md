@@ -47,10 +47,21 @@ Firmware Gospel for the code. Each one is meant to be the book you trust for its
 radio. The religious names are iconography, nothing more: I'm not religious, I just like the
 symbols. Don't be upset about this please.
 
-- [`docs/HARDWARE-BIBLE.md`](docs/HARDWARE-BIBLE.md): what is wired to what, fitted values,
-  the tube radio circuit, the FM antenna, the amplifier, the cabinet and the printed parts.
-- [`docs/FIRMWARE-GOSPEL.md`](docs/FIRMWARE-GOSPEL.md): what the firmware does and why,
-  every setting, what was tried and dropped, and how to build, flash, update and recover it.
+Each comes in two editions with the same information. The **Human Readable edition** is the one to
+read: chapters, figures, an index and a "when something is wrong" table at the end of most chapters.
+The **LLM edition** is the complete reference text it was written from; where the two differ, the LLM
+edition is right.
+
+- **Hardware Bible**: what is wired to what, fitted values, the tube radio circuit, the FM antenna, the
+  amplifier, the cabinet and the printed parts.
+  [PDF](docs/Ambersong%20-%20Hardware%20Bible%20-%20Human%20Readable.pdf) ·
+  [chapters](docs/human/hardware-bible/) ·
+  [LLM edition](docs/llm-edition/HARDWARE-BIBLE.md)
+- **Firmware Gospel**: what the firmware does and why, every setting, what was tried and dropped, and
+  how to build, flash, update and recover it.
+  [PDF](docs/Ambersong%20-%20Firmware%20Gospel%20-%20Human%20Readable.pdf) ·
+  [chapters](docs/human/firmware-gospel/) ·
+  [LLM edition](docs/llm-edition/FIRMWARE-GOSPEL.md)
 
 ## Building your own
 
@@ -75,7 +86,8 @@ a tube radio. Hardware Bible §31.1 covers what that means in this build.
 ## What's in here
 
 ```
-docs/                    the Hardware Bible and the Firmware Gospel
+docs/                    the Hardware Bible and the Firmware Gospel: Human Readable PDFs,
+                         their chapters (docs/human/) and the LLM editions (docs/llm-edition/)
 firmware/                the PlatformIO project for both boards
 hardware/schematics/     the KiCad project, a collated PDF file and the radio's factory schematic
 hardware/STLs/           the 76 printed parts and a Sketchup project with all those parts

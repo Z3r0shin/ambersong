@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 620" font-family="Segoe UI" font-size="11">
+<rect width="100%" height="100%" fill="white"/>
+<rect x="282" y="22" width="136" height="522" rx="6" fill="#f7f7f7" stroke="#555"/>
+<text x="313.0" y="40" text-anchor="middle" font-weight="bold">row 1</text>
+<text x="387.0" y="40" text-anchor="middle" font-weight="bold">row 2</text>
+<rect x="290" y="52" width="46" height="18" rx="3" fill="#fde2e2" stroke="#444"/>
+<text x="313.0" y="65" text-anchor="middle" fill="black">3V3</text>
+<text x="276" y="65" text-anchor="end" fill="black">3.3 V out: main board 3.3 V</text>
+<rect x="364" y="52" width="46" height="18" rx="3" fill="#fde2e2" stroke="#444"/>
+<text x="387.0" y="65" text-anchor="middle" fill="black">GND</text>
+<text x="424" y="65" text-anchor="start" fill="black">ground</text>
+<rect x="290" y="74" width="46" height="18" rx="3" fill="#fde2e2" stroke="#444"/>
+<text x="313.0" y="87" text-anchor="middle" fill="black">3V3</text>
+<text x="276" y="87" text-anchor="end" fill="black">second 3.3 V pin</text>
+<rect x="364" y="74" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="387.0" y="87" text-anchor="middle" fill="#999">43</text>
+<text x="424" y="87" text-anchor="start" fill="#999">not wired</text>
+<rect x="290" y="96" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="313.0" y="109" text-anchor="middle" fill="#999">RST</text>
+<text x="276" y="109" text-anchor="end" fill="#999">not wired</text>
+<rect x="364" y="96" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="387.0" y="109" text-anchor="middle" fill="#999">44</text>
+<text x="424" y="109" text-anchor="start" fill="#999">not wired</text>
+<rect x="290" y="118" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="313.0" y="131" text-anchor="middle" fill="#999">4</text>
+<text x="276" y="131" text-anchor="end" fill="#999">old limit input: pull-up and cap only</text>
+<rect x="364" y="118" width="46" height="18" rx="3" fill="#efe2f7" stroke="#444"/>
+<text x="387.0" y="131" text-anchor="middle" fill="black">1</text>
+<text x="424" y="131" text-anchor="start" fill="black">amplifier-on sensor</text>
+<rect x="290" y="140" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="313.0" y="153" text-anchor="middle" fill="black">5</text>
+<text x="276" y="153" text-anchor="end" fill="black">needle index sensor</text>
+<rect x="364" y="140" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="387.0" y="153" text-anchor="middle" fill="black">2</text>
+<text x="424" y="153" text-anchor="start" fill="black">digit 2 select</text>
+<rect x="290" y="162" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="313.0" y="175" text-anchor="middle" fill="black">6</text>
+<text x="276" y="175" text-anchor="end" fill="black">segment driver input 1</text>
+<rect x="364" y="162" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="387.0" y="175" text-anchor="middle" fill="black">42</text>
+<text x="424" y="175" text-anchor="start" fill="black">digit 1 select</text>
+<rect x="290" y="184" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="313.0" y="197" text-anchor="middle" fill="black">7</text>
+<text x="276" y="197" text-anchor="end" fill="black">segment driver input 2</text>
+<rect x="364" y="184" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="387.0" y="197" text-anchor="middle" fill="black">41</text>
+<text x="424" y="197" text-anchor="start" fill="black">digit 4 select</text>
+<rect x="290" y="206" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="313.0" y="219" text-anchor="middle" fill="black">15</text>
+<text x="276" y="219" text-anchor="end" fill="black">segment driver input 3</text>
+<rect x="364" y="206" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="387.0" y="219" text-anchor="middle" fill="black">40</text>
+<text x="424" y="219" text-anchor="start" fill="black">digit 3 select</text>
+<rect x="290" y="228" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="313.0" y="241" text-anchor="middle" fill="black">16</text>
+<text x="276" y="241" text-anchor="end" fill="black">segment driver input 4</text>
+<rect x="364" y="228" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="387.0" y="241" text-anchor="middle" fill="black">39</text>
+<text x="424" y="241" text-anchor="start" fill="black">angle sensor clock (SCL)</text>
+<rect x="290" y="250" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="313.0" y="263" text-anchor="middle" fill="black">17</text>
+<text x="276" y="263" text-anchor="end" fill="black">segment driver input 5</text>
+<rect x="364" y="250" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="387.0" y="263" text-anchor="middle" fill="black">38</text>
+<text x="424" y="263" text-anchor="start" fill="black">angle sensor data (SDA)</text>
+<rect x="290" y="272" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="313.0" y="285" text-anchor="middle" fill="black">18</text>
+<text x="276" y="285" text-anchor="end" fill="black">segment driver input 7</text>
+<rect x="364" y="272" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="387.0" y="285" text-anchor="middle" fill="#999">37</text>
+<text x="424" y="285" text-anchor="start" fill="#999">not wired (memory)</text>
+<rect x="290" y="294" width="46" height="18" rx="3" fill="#fdebc8" stroke="#444"/>
+<text x="313.0" y="307" text-anchor="middle" fill="black">8</text>
+<text x="276" y="307" text-anchor="end" fill="black">segment driver input 6</text>
+<rect x="364" y="294" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="387.0" y="307" text-anchor="middle" fill="#999">36</text>
+<text x="424" y="307" text-anchor="start" fill="#999">not wired (memory)</text>
+<rect x="290" y="316" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="313.0" y="329" text-anchor="middle" fill="#999">3</text>
+<text x="276" y="329" text-anchor="end" fill="#999">not wired</text>
+<rect x="364" y="316" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="387.0" y="329" text-anchor="middle" fill="#999">35</text>
+<text x="424" y="329" text-anchor="start" fill="#999">not wired (memory)</text>
+<rect x="290" y="338" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="313.0" y="351" text-anchor="middle" fill="#999">46</text>
+<text x="276" y="351" text-anchor="end" fill="#999">not wired</text>
+<rect x="364" y="338" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="387.0" y="351" text-anchor="middle" fill="#999">0</text>
+<text x="424" y="351" text-anchor="start" fill="#999">not wired</text>
+<rect x="290" y="360" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="313.0" y="373" text-anchor="middle" fill="black">9</text>
+<text x="276" y="373" text-anchor="end" fill="black">stepper driver IN1</text>
+<rect x="364" y="360" width="46" height="18" rx="3" fill="#ffffff" stroke="#bbb"/>
+<text x="387.0" y="373" text-anchor="middle" fill="#999">45</text>
+<text x="424" y="373" text-anchor="start" fill="#999">not wired</text>
+<rect x="290" y="382" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="313.0" y="395" text-anchor="middle" fill="black">10</text>
+<text x="276" y="395" text-anchor="end" fill="black">stepper driver IN2</text>
+<rect x="364" y="382" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="387.0" y="395" text-anchor="middle" fill="black">48</text>
+<text x="424" y="395" text-anchor="start" fill="black">calibration receiver clock + RGB LED</text>
+<rect x="290" y="404" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="313.0" y="417" text-anchor="middle" fill="black">11</text>
+<text x="276" y="417" text-anchor="end" fill="black">stepper driver IN3</text>
+<rect x="364" y="404" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="387.0" y="417" text-anchor="middle" fill="black">47</text>
+<text x="424" y="417" text-anchor="start" fill="black">calibration receiver data</text>
+<rect x="290" y="426" width="46" height="18" rx="3" fill="#e3eefc" stroke="#444"/>
+<text x="313.0" y="439" text-anchor="middle" fill="black">12</text>
+<text x="276" y="439" text-anchor="end" fill="black">stepper driver IN4</text>
+<rect x="364" y="426" width="46" height="18" rx="3" fill="#efe2f7" stroke="#444"/>
+<text x="387.0" y="439" text-anchor="middle" fill="black">21</text>
+<text x="424" y="439" text-anchor="start" fill="black">FM panel lamps (PWM)</text>
+<rect x="290" y="448" width="46" height="18" rx="3" fill="#dff2df" stroke="#444"/>
+<text x="313.0" y="461" text-anchor="middle" fill="black">13</text>
+<text x="276" y="461" text-anchor="end" fill="black">serial link, to audio board</text>
+<rect x="364" y="448" width="46" height="18" rx="3" fill="#e6e6e6" stroke="#444"/>
+<text x="387.0" y="461" text-anchor="middle" fill="black">20</text>
+<text x="424" y="461" text-anchor="start" fill="black">USB D+ (back-panel port)</text>
+<rect x="290" y="470" width="46" height="18" rx="3" fill="#dff2df" stroke="#444"/>
+<text x="313.0" y="483" text-anchor="middle" fill="black">14</text>
+<text x="276" y="483" text-anchor="end" fill="black">serial link, from audio board</text>
+<rect x="364" y="470" width="46" height="18" rx="3" fill="#e6e6e6" stroke="#444"/>
+<text x="387.0" y="483" text-anchor="middle" fill="black">19</text>
+<text x="424" y="483" text-anchor="start" fill="black">USB D− (back-panel port)</text>
+<rect x="290" y="492" width="46" height="18" rx="3" fill="#fde2e2" stroke="#444"/>
+<text x="313.0" y="505" text-anchor="middle" fill="black">5V</text>
+<text x="276" y="505" text-anchor="end" fill="black">5 V in, from the 5 V bus</text>
+<rect x="364" y="492" width="46" height="18" rx="3" fill="#fde2e2" stroke="#444"/>
+<text x="387.0" y="505" text-anchor="middle" fill="black">GND</text>
+<text x="424" y="505" text-anchor="start" fill="black">ground</text>
+<rect x="290" y="514" width="46" height="18" rx="3" fill="#fde2e2" stroke="#444"/>
+<text x="313.0" y="527" text-anchor="middle" fill="black">GND</text>
+<text x="276" y="527" text-anchor="end" fill="black">ground</text>
+<rect x="364" y="514" width="46" height="18" rx="3" fill="#fde2e2" stroke="#444"/>
+<text x="387.0" y="527" text-anchor="middle" fill="black">GND</text>
+<text x="424" y="527" text-anchor="start" fill="black">ground</text>
+<rect x="60" y="558" width="12" height="12" rx="2" fill="#fde2e2" stroke="#444"/>
+<text x="77" y="568">power and ground</text>
+<rect x="215" y="558" width="12" height="12" rx="2" fill="#fdebc8" stroke="#444"/>
+<text x="232" y="568">clock display</text>
+<rect x="370" y="558" width="12" height="12" rx="2" fill="#e3eefc" stroke="#444"/>
+<text x="387" y="568">needle and tuning</text>
+<rect x="525" y="558" width="12" height="12" rx="2" fill="#dff2df" stroke="#444"/>
+<text x="542" y="568">link to the audio board</text>
+<rect x="60" y="576" width="12" height="12" rx="2" fill="#efe2f7" stroke="#444"/>
+<text x="77" y="586">lamps and amplifier sensor</text>
+<rect x="215" y="576" width="12" height="12" rx="2" fill="#e6e6e6" stroke="#444"/>
+<text x="232" y="586">USB</text>
+<rect x="370" y="576" width="12" height="12" rx="2" fill="#ffffff" stroke="#444"/>
+<text x="387" y="586">not wired</text>
+<text x="350.0" y="610" text-anchor="middle" fill="#555">Numbers are GPIO numbers. Row order as on Espressif's ESP32-S3-DevKitC-1; positions of unused pins not checked on this board.</text>
+</svg>
