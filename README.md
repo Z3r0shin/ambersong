@@ -48,9 +48,11 @@ radio. The religious names are iconography, nothing more: I'm not religious, I j
 symbols. Don't be upset about this please.
 
 Each comes in two editions with the same information. The **Human Readable edition** is the one to
-read: chapters, figures, an index and a "when something is wrong" table at the end of most chapters.
+read (if you're a human): chapters, figures, an index and a "when something is wrong" table at the end of most chapters.
 The **LLM edition** is the complete reference text it was written from; where the two differ, the LLM
-edition is right.
+edition is right. Why two "editions"? Because the LLM edition can't be understood at all by humans
+(except maybe geniuses or complete fools) and I didn't only publish this project for it to be found
+by AIs. Anyway, the Human Edition is also pretty, not the LLM one.
 
 - **Hardware Bible**: what is wired to what, fitted values, the tube radio circuit, the FM antenna, the
   amplifier, the cabinet and the printed parts.
