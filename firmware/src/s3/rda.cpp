@@ -5,12 +5,12 @@
 namespace Rda {
 
 // ---------------------------------------------------------------------------
-//  THE PART. RDA5807M, on its own I2C bus, Wire1 (wiring: Bible §11).
+//  THE PART. RDA5807M, on its own I2C bus, Wire1 (wiring: Hardware Bible).
 //
 //  Its I2C addresses are FIXED IN SILICON - 0x11 random access, 0x10
 //  sequential, 0x60 TEA5767 emulation. Three modes of one chip, no address
 //  select pin and no strap. It is kept off the AS5600's bus because that bus
-//  carries the tuning sensor and was set up for it alone (Bible §11); spending
+//  carries the tuning sensor and was set up for it alone (Hardware Bible); spending
 //  its margin to save two spare GPIOs would be a bad trade.
 // ---------------------------------------------------------------------------
 static const uint8_t ADDR_RANDOM = 0x11;

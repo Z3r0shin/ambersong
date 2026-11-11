@@ -9,7 +9,7 @@
 //  That matters because the two audio paths want incompatible drivers:
 //    - A2DP alone wants TX only, 16-bit, no MCLK
 //    - the radio path needs FULL DUPLEX, 32-bit slots, and MCLK on GPIO0,
-//      which feeds both converters (Hardware Bible §3)
+//      which feeds both converters (Hardware Bible)
 //  Reconfiguring or reinstalling the driver at every source change - while
 //  Bluedroid holds a reference to it - is the part of this project that could
 //  hard-fault in ways that are miserable to debug.
@@ -31,9 +31,9 @@
 //
 //  MUTE IS ALWAYS SOFTWARE
 //  There is no hardware mute to use: no A32 pin reaches the DAC's XSMT, which
-//  the module pulls up itself (Hardware Bible §6). Writing
+//  the module pulls up itself (Hardware Bible). Writing
 //  zeros is complete and safe: AUX only needs the DAC silent because the amp's
-//  input panel SUMS its three inputs (Hardware Bible §30).
+//  input panel SUMS its three inputs (Hardware Bible).
 // ============================================================================
 
 #pragma once
@@ -49,7 +49,7 @@ void begin();
 //  out, switch at silence, ramp in. Without the ramp every change is a hard
 //  cut, audible as a thump through the amplifier. Moving between the
 //  selector's two ends passes through its centre, which reads AUX (Hardware
-//  Bible §11).
+//  Hardware Bible).
 void setSource(uint8_t src);
 uint8_t source();
 

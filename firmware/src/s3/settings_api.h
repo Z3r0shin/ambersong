@@ -6,8 +6,8 @@
 //  and writes, the POST handler and the downloadable settings file.
 //
 //  This exists because the alternative was editing four places for every new
-//  knob and watching them drift apart. The author asked for "all the knobs and
-//  sliders I can"; a table is what makes that affordable rather than a chore.
+//  knob and watching them drift apart. A table is what makes adding every
+//  knob and slider affordable rather than a chore.
 //
 //  The table lives in settings_table.h, which main.cpp includes next to the
 //  structs it points into. Only the ACCESS is declared here, so portal.cpp
@@ -61,7 +61,7 @@ bool   settingSet(int i, float v);          // clamps, writes, then applies and 
                                             // or pushes to the A32; false if refused or unchanged
 int    settingFind(const char *key);        // -1 if unknown
 
-//  The plain-text form the author asked for: recoverable by hand, and readable
+//  The plain-text form: recoverable by hand, and readable
 //  in ten years by something that is not this firmware.
 void   settingsToText(String &out);
 int    settingsFromText(const String &in);  // returns how many keys were applied
@@ -82,7 +82,7 @@ void        portalNeedleResume();
 //  True when the action just executed by doAction() was a refusal rather than
 //  an acknowledgement, so the portal can render it as one.
 bool        actionRefused();
-//  Non-empty when the tuning curve is in a state the author needs to see: the
+//  Non-empty when the tuning curve is in a state worth seeing: the
 //  marks refused outright, the quadratic demoted to a line, or a tuner end
 //  still unmeasured. All three are checked; an earlier version documented all
 //  three and tested only the first.
@@ -130,7 +130,7 @@ bool s3ImageOnTrial();
 
 // ---------------------------------------------------------------------------
 //  RELAYING A FIRMWARE IMAGE TO THE A32 OVER THE UART.
-//  The S3 cannot reset the A32 (Bible §3: its EN is not wired), so this is
+//  The S3 cannot reset the A32 (Hardware Bible: its EN is not wired), so this is
 //  the only wireless route to that MCU.
 //  Implemented in main.cpp, where the link and its acknowledgements live.
 // ---------------------------------------------------------------------------

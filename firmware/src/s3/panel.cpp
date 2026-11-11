@@ -22,8 +22,8 @@ static uint32_t lastTurnMs = 0;
 
 // ---------------------------------------------------------------------------
 //  EASING
-//  The author's brief: "not rapid and instantaneous, but like a capacitor
-//  emptying" - hold for a moment, then start slowly, accelerate, and settle.
+//  Not rapid and instantaneous, but like a capacitor
+//  emptying - hold for a moment, then start slowly, accelerate, and settle.
 //
 //  smoothstep, p*p*(3-2p), gives exactly that shape: zero slope at both ends
 //  and the fastest movement in the middle. A linear ramp starts and stops

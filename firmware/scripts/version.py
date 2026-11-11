@@ -1,6 +1,6 @@
 #  AMBERSONG  -  build-time version stamping
 #
-#  Author's convention, used unchanged:  v.X.YYYYMMDDTHHMMSS
+#  Convention, used unchanged:  v.X.YYYYMMDDTHHMMSS
 #
 #  Stamped at BUILD time rather than kept in a file, because the number that
 #  matters is "which binary is this", not "which source revision". Two builds of
@@ -8,8 +8,8 @@
 #  so the pair WILL run mismatched builds at some point and the handshake has to
 #  be able to say which is which.
 #
-#  MAJOR is the author's release number and nothing else - bumped by hand, only
-#  when he declares a release. A protocol break is PROTO_VERSION's job (proto.h),
+#  MAJOR is the release number and nothing else - bumped by hand, only
+#  when a release is declared. A protocol break is PROTO_VERSION's job (proto.h),
 #  not MAJOR's.
 #
 #  THE COMMIT, SEPARATELY. The stamp says which binary; FW_COMMIT says which
@@ -27,8 +27,8 @@ import subprocess
 
 Import("env")
 
-#  Author's rule, 2026-09-02: v.1 is when it is done - fully calibrated, OTA
-#  confirmed, and every outstanding problem resolved. Declared done 2026-09-25.
+#  Rule: v.1 is when it is done - fully calibrated, OTA
+#  confirmed, and every outstanding problem resolved.
 MAJOR = 1
 
 stamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")

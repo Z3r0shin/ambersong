@@ -60,7 +60,7 @@ int  apClients();      // -1 when not running an access point
 
 //  Transmit power in QUARTER-dBm, clamped to 8..60 (2.0..15.0 dBm). 15 dBm is
 //  this firmware's ceiling: measured 2026-09-24, this board radiated nothing at
-//  20 dBm and reliably at 15, and the author keeps it as a firmware choice.
+//  20 dBm and reliably at 15, kept as a firmware choice.
 //  Stored in the settings and re-applied after every WiFi mode change, because
 //  esp_wifi_set_mode() does not carry it across. A failed join steps it up the
 //  ladder in net.cpp (TX_LADDER), and the rung that joins is kept.

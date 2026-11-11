@@ -4,3 +4,5 @@
 *-backups/
 *.skb
 *.kicad_prl
+# The edition sources and build scripts: kept by spirit, never published
+/_spirit/

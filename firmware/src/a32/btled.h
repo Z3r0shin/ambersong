@@ -1,7 +1,7 @@
 // ============================================================================
 //  AMBERSONG  -  BT INDICATOR LED  (A32, GPIO33)
 //
-//  Author's specification of 2026-08-28, implemented verbatim:
+//  Implemented verbatim:
 //
 //    OFF    off
 //    ON     steady, duty 64/255
@@ -14,7 +14,7 @@
 //  The visual language: fast breathing = actively looking, slow breathing =
 //  idle, double flash = found, steady = connected, regular blink = pairing.
 //
-//  ACTIVE LOW (the LED's wiring: Hardware Bible §11), so every brightness is
+//  ACTIVE LOW (the LED's wiring: Hardware Bible), so every brightness is
 //  written inverted: for brightness B, write 255 - B. LEDC channel 0, 2 kHz,
 //  8-bit, exactly as specified.
 //

@@ -17,7 +17,7 @@
 //    - the S3 keeps the clock, needle and panel running if the A32 is silent;
 //      for the S3, peerAlive() only decides when to forget the handshake and
 //      the A32's settings mirror, and to display the link's state.
-//    - the A32 GATES ON IT: by the author's awake rule (2026-09-01) it plays
+//    - the A32 GATES ON IT: the awake rule means it plays
 //      and takes Bluetooth only while the amp is on AND peerAlive() is true
 //      (serviceWake() in a32/main.cpp). When the S3 goes quiet - its own OTA
 //      reboot included - the A32 mutes and drops the phone until it is back.

@@ -5,11 +5,11 @@
 //  MCU, WiFi, NTP and the web portal. The portal only sets values that already
 //  exist (the settings table) rather than reaching into behaviour.
 //
-//  CORE SPLIT (Firmware Gospel §4):
+//  CORE SPLIT (Firmware Gospel):
 //    core 1  display ISR, needle task, RDA task, this loop
 //    core 0  WiFi, the portal task and the needle's step emitter
 //
-//  TIME LIVES ON THE OTHER MCU. The battery clock is on the A32 (Bible §5) and
+//  TIME LIVES ON THE OTHER MCU. The battery clock is on the A32 (Hardware Bible) and
 //  the display is here, so the clock crosses the UART. The S3 keeps its own
 //  software clock disciplined by what the A32 reports (and by NTP when WiFi is
 //  up), so a slow or missing link never makes the display stutter - it just
@@ -85,10 +85,10 @@ static const uint16_t SETTINGS_VERSION = 7;
 //  HOW MANY (angle, frequency) SAMPLES the tuning curve can hold.
 //  Three are set by hand - marks A/B/C, a typed frequency at the dial's
 //  current position - and the rest are there for the RDA5807M
-//  auto-calibration (Firmware Gospel §6), which reads the tube
+//  auto-calibration (Firmware Gospel), which reads the tube
 //  set's own local oscillator and can therefore produce a sample at ANY dial
 //  position without a station to identify. The manual marks take slots 0-2 so
-//  an automatic sample can never overwrite something the author set by hand.
+//  an automatic sample can never overwrite something set by hand.
 static const uint8_t TUNE_MARKS = 12;
 
 //  HOW MANY FIXED FEATURES the settings layout can hold. A SETTINGS constant,
@@ -169,10 +169,10 @@ struct Settings {
   uint16_t panelFadeMs   = 900;   // eased travel, not a step
   uint16_t panelDwellMs  = 250;   // stillness first, so it decides rather than reacts
 
-  //  NEEDLE MOTION - THE VALIDATED CONFIGURATION (Firmware Gospel §5).
+  //  NEEDLE MOTION - THE VALIDATED CONFIGURATION (Firmware Gospel).
   //  These took a whole session and four firmware bugs to find. Do not re-tune
   //  them by eye.
-  //  1100, NOT 1700 - MEASURED BY THE AUTHOR, 2026-09-24. Faster than this, moving
+  //  1100, NOT 1700 - MEASURED, 2026-09-24. Faster than this, moving
   //  UP through the index, the needle stops following while the firmware keeps
   //  counting (1500 failed every time, 1200-1400 often, 1100 never), and every
   //  power-up sweep landed ~400 half-steps low. The band check in needleTask now
@@ -217,7 +217,6 @@ struct Settings {
   //  0 = the clock, always. 1 = the tuning readout, always.
   //  2 = the readout WHILE TUNING, then back to the clock - the same idea as
   //      the panel lights coming up under your hand and settling afterwards.
-  //      Author's request, 2026-08-31.
   uint8_t  showTuning    = 0;
   uint16_t bandLow       = 881;   // 88.1 MHz, shown as "881"
   uint16_t bandHigh      = 1079;  // 107.9 MHz
@@ -232,7 +231,7 @@ struct Settings {
 
   //  APPENDED AT V5. THE MAPPING IS A CURVE, NOT A LINE.
   //
-  //  Measured on this set 2026-09-04 from three stations the author verified by
+  //  Measured on this set 2026-09-04 from three stations verified by
   //  ear: the local slope is 0.251 tenths of a MHz per permille between 91.3
   //  and 98.5, and 0.288 between 98.5 and 107.3 - a 15% change. A straight
   //  line fitted to the two ends is exact at the ends and half a megahertz out
@@ -306,14 +305,14 @@ struct Settings {
   //  six readings. The nominal 10.7 is 214.
   //
   //  WHY IT IS A SETTING AND NOT A CONSTANT. The set's IF is 10.6 MHz, not the
-  //  nominal 10.7 (Bible §15, §22). The RDA found it first, 2026-09-22: across
-  //  six stations the author named by ear - 88.5, 96.9, 98.5, 100.7, 105.7,
+  //  nominal 10.7 (Hardware Bible). The RDA found it first, 2026-09-22: across
+  //  six stations named by ear - 88.5, 96.9, 98.5, 100.7, 105.7,
   //  107.3 - the implied IF came back 10.60 five times and 10.65 once, never
   //  10.70, while the broadcasts it received directly all landed on valid
   //  odd-tenth channels, so the RDA's own scale is not the cause. The IF can
   //  move again whenever the set is realigned, and it must be correctable
   //  without a flash.
-  int16_t  ifOffset20    = 212;       // 10.60 MHz (Bible §22)
+  int16_t  ifOffset20    = 212;       // 10.60 MHz (Hardware Bible)
 };
 
 
@@ -366,7 +365,7 @@ static uint32_t   gTimeAsked = 0;   // millis of an unanswered MSG_GET_TIME, 0 =
 
 // ---------------------------------------------------------------------------
 //  EASED DISPLAY BRIGHTNESS
-//  The author's brief: powering down should not snap the clock to its standby
+//  Powering down should not snap the clock to its standby
 //  level, it should let go like something with a reservoir behind it.
 //
 //  Same shape as the panel - a dwell, then smoothstep, which has zero slope at
@@ -425,7 +424,7 @@ static const char *tuneDropAction(int slot);
 //  ONE COPY OF THE LIMIT-CAPTURE RULE. It existed twice - the portal action and
 //  the console m/M - and only the portal copy was guarded, which is the same
 //  shape as the settingBound history: "it was written twice before, and the
-//  second copy went to the file path only". The author will be on the console.
+//  second copy went to the file path only". Assume the console is being watched.
 //
 //  Refuses unless the position means something: homed, not mid-calibration,
 //  the band actually measured (without it every REVERSE crossing reports the
@@ -442,7 +441,7 @@ static const char *captureLimit(bool low) {
   //  ASK WHETHER THE NEEDLE IS STILL OUT, NOT WHETHER IT EVER WAS.
   //  This tested |lastDrift()| > 12, and lastDrift() is never cleared once a
   //  crossing has been absorbed into gPos - so it refused on a discrepancy the
-  //  machine had already corrected, and told the author to re-home, which sends
+  //  machine had already corrected, and asked for a re-home, which sends
   //  the needle through the index again and re-measures the same number. No
   //  exit; hit at the bench on 2026-09-03. The 12 also contradicted
   //  CORRECT_MAX_HS = 40: everything from 13 to 40 was silently corrected by
@@ -521,7 +520,7 @@ static const char *tuneModelName() { return gTuneModelStr; }
 //  string. Searching that string for "REFUSED" also matched
 //  "least-squares line (QUADRATIC REFUSED: turns back on itself)" - which is a
 //  mark that WAS accepted, whose line IS the running mapping, and which the
-//  author would have seen painted red for twelve seconds as a rejection. The
+//  would have been painted red for twelve seconds as a rejection. The
 //  model string exists to be read by a person; a decision must not be parsed
 //  back out of prose.
 static bool gFitRefused = false;
@@ -582,7 +581,7 @@ static void setTuneModel(uint8_t m, const char *why) {
 //  site each time - a reach computed where the evaluator clamps it, a reason
 //  omitted from one toast, a note appended on one path - because five places
 //  each built their own sentence out of the same parts. Sets *bad when what it
-//  describes is something the author needs to act on.
+//  describes is something that needs to be acted on.
 static uint8_t tuneSampleCount();          // defined with the fit, below
 
 //  The same two numbers the state line uses, for the JSON, which wants them
@@ -611,7 +610,7 @@ static void tuneStateLine(char *out, size_t n, bool *bad) {
            tuneModelName(),
            (long)(lo / 10), (long)(lo % 10), (long)(hi / 10), (long)(hi % 10));
   //  *bad MEANS REFUSED, and nothing else. Unmeasured tuner ends are a real
-  //  thing the author must fix, but they are not a rejection of the button he
+  //  thing that must be fixed, but they are not a rejection of the button
   //  just pressed - and routing them through the refusal channel meant the
   //  FIRST successful mark on any uncalibrated machine, which is every machine
   //  before the ends are set, came back painted as a failure. The note travels
@@ -983,7 +982,7 @@ static void settingsLoad() {
   //  defaults - which is the whole point of appending.
   //  V4 -> V5. Same prefix rule as V3 -> V4. tuneUsed defaults to 0, so a
   //  machine with no marks keeps the straight line it already had and behaves
-  //  identically until the author sets the first mark.
+  //  identically until the first mark is set.
   //  V5 -> V6. Same prefix rule again. There is NOTHING to infer here, unlike
   //  V4 -> V5 where a non-default calLow/calHigh was itself evidence that a
   //  hand measurement had happened: a V5 blob contains no trace of a spur ever
@@ -1112,7 +1111,7 @@ static void settingsDump() {
                 (long)cfg.calLow, (long)cfg.calHigh, (long)cfg.lastAngle);
   Con.printf("bandLow=%u bandHigh=%u tuneHoldMs=%u" "\n",
                 cfg.bandLow, cfg.bandHigh, cfg.tuneHoldMs);
-  //  The dial calibration asks the author to CHECK these two, and the dump once
+  //  The dial calibration asks for these two to be CHECKED, and the dump once
   //  did not print them. A settings dump that omits settings is worse
   //  than no dump: it reads as confirmation.
   Con.printf("dialLow=%u dialHigh=%u" "\n", cfg.dialLow, cfg.dialHigh);
@@ -1165,7 +1164,7 @@ static void settingsTouch() {
 }
 
 //  "Save now" from the portal. Still refuses while the needle is moving (see
-//  writeSafe(), and Firmware Gospel §7) - it only stops waiting out the debounce.
+//  writeSafe(), and Firmware Gospel) - it only stops waiting out the debounce.
 static bool settingsForceFlush();
 //  NEVER WRITE NVS WHILE THE NEEDLE IS MOVING.
 //  An NVS write disables the flash cache, which stalls every piece of code that
@@ -1186,8 +1185,8 @@ static bool settingsForceFlush();
 //  firmware does not know - a DOWNGRADE. That branch always promised that
 //  nothing would be overwritten, but the first settingsTouch() (the
 //  lastAngle save, within ten seconds of boot) wrote the defaults over the newer
-//  blob two seconds later. Now nothing writes until the author uploads a COMPLETE
-//  settings file, which is the one deliberate act that means "use these".
+//  blob two seconds later. Now nothing writes until a COMPLETE
+//  settings file is uploaded, which is the one deliberate act that means "use these".
 static bool gWriteBusy = false;       // the last refusal was the other core writing
 static bool settingsWrite() {
   if (gSettingsLocked) return false;
@@ -1708,7 +1707,7 @@ void portalStateJson(String &out) {
   //  the DAC leaving analogue mute, which the datasheet does not ramp, which is
   //  a pop the A32's volume cannot scale. Published here rather than left on the
   //  A32's console because the console is a cable and the cabinet gets shut -
-  //  the author asked for exactly this on 2026-09-10.
+  //  this is exactly what was wanted.
   //
   //  Zeroed rather than omitted when the link is down: a missing key would make
   //  the page read "-" and a stale key would make it read a lie. haveState is
@@ -1783,7 +1782,7 @@ void portalStateJson(String &out) {
   out += gSettingsLocked ? "\"setlock\":1," : "\"setlock\":0,";
   out += "\"rtc\":"; out += String((int)gRtcBad); out += ",";
   out += "\"linkver\":"; out += String((unsigned long)gLink.badVer()); out += ",";
-  //  The author's hand offset on the tuning readout, tenths of a MHz. It now
+  //  The hand offset on the tuning readout, tenths of a MHz. It now
   //  survives automatic samples, so the page must be able to say it is there.
   out += "\"toff\":"; out += String((int)cfg.tuneOffset10); out += ",";
 
@@ -1817,9 +1816,9 @@ void portalStateJson(String &out) {
     int32_t f = Needle::tuneFreq10();          //  ONE definition - see needle.h
     //  THE PORTAL SHOWS THE TRUTH. The Leditron clamps - it draws the FM band
     //  and nothing else - but this is the screen used for diagnosis, and the
-    //  author's own complaint was that silently pinning destroys the evidence
-    //  that the band line is wrong: "if the tuning goes UP over the max steps
-    //  I can do then THE NEEDLE IS WRONG". Clamping here would have answered
+    //  complaint was that silently pinning destroys the evidence
+    //  that the band line is wrong: if the tuning goes up over the max steps
+    //  it can do, that means the needle is wrong. Clamping here would have answered
     //  that objection by removing the instrument.
     bool over = (f < (int32_t)cfg.dialLow) || (f > (int32_t)cfg.dialHigh);
     snprintf(buf, sizeof(buf), "%ld.%ld MHz%s", (long)(f / 10), (long)(f % 10),
@@ -1922,7 +1921,7 @@ void portalOtaQuiet(bool on) {
 // ---------------------------------------------------------------------------
 //  WHERE THE NEEDLE SHOULD BE POINTING, given the amp and the source.
 //
-//  THE POLICY, author's, 2026-08-31:
+//  THE POLICY, 2026-08-31:
 //    - The sensor is sought and the frame calibrated at S3 boot, which the
 //      firmware treats as first power-up; the front switch is not. After that
 //      it homes again only to recover (a slip, a failed home) or when asked.
@@ -1944,7 +1943,7 @@ void portalOtaQuiet(bool on) {
 //  shown only when the amp is on AND the source is RADIO.
 //  A LISTENING POLICY, NOT A HARDWARE FACT. The selector
 //  only tells the A32 which sound to play; the tube set runs whenever the amp
-//  does, whatever the selector says (Bible §21, §5). The needle follows and the
+//  does, whatever the selector says (Hardware Bible). The needle follows and the
 //  dial calibrates only while the radio is what you are listening to - by
 //  choice.
 static bool radioLive() {
@@ -2010,7 +2009,7 @@ static const uint8_t SMP_MIN_MARGIN = 8;
 
 //  AND A HIGHER BAR WHEN NOBODY IS WATCHING. An operator who pressed the button
 //  has just looked at the dial and would notice an absurd answer; an automatic
-//  sample is read by nobody and goes straight into the curve the author's whole
+//  sample is read by nobody and goes straight into the curve the whole
 //  calibration rests on. Measured margins on this machine have been +18 to +28,
 //  so 14 costs nothing real and refuses everything marginal.
 static const uint8_t SMP_AUTO_MARGIN = 14;
@@ -2044,7 +2043,7 @@ static const int32_t SMP_MAX_DISAGREE10 = 40;
 static const uint8_t SMP_TRUST_AFTER = 2;
 
 //  Print it and keep it. Every outcome of a measurement goes through here, so
-//  there is exactly one place where "the author was told" can be true or false.
+//  there is exactly one place where what was reported can be true or false.
 static void smpSay(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
@@ -2163,8 +2162,8 @@ static void sampleStore(int16_t lo20, uint8_t margin) {
     if (gap < 0) gap = -gap;
     if (gap < 60) { slot = i; refresh = true; break; }
   }
-  //  A HAND MARK COVERS THIS SPOT. Slots 0-2 are what the author typed, station
-  //  by ear, and only tune.markA/B/C may write them (we can
+  //  A HAND MARK COVERS THIS SPOT. Slots 0-2 are the stations typed in by
+  //  ear, and only tune.markA/B/C may write them (we can
   //  always re-set those in the web portal, just not automatically). Until
   //  then a sample landing near one REFRESHED it, and parking at the band ends
   //  replaced all three. A sample here is not stored at all: the mark already
@@ -2176,7 +2175,7 @@ static void sampleStore(int16_t lo20, uint8_t margin) {
     return;
   }
 
-  //  SLOTS 0-2 ARE THE AUTHOR'S. No sample - automatic or V - claims or
+  //  SLOTS 0-2 ARE HAND-TYPED. No sample - automatic or V - claims or
   //  refreshes one; see the hand-mark check above.
   if (slot < 0) {
     int from = 3;                 // 0-2 belong to tune.markA/B/C alone
@@ -2231,8 +2230,8 @@ static void sampleStore(int16_t lo20, uint8_t margin) {
   cfg.tuneP[slot] = gSmpAcc;
   cfg.tuneF[slot] = (uint16_t)station10;
   cfg.tuneUsed   |= (uint16_t)(1u << slot);
-  //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; the author
-  //  ruled on 2026-09-25 that hand corrections are never erased automatically,
+  //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; hand
+  //  corrections are never erased automatically,
   //  only by hand (tune.nudgeZero).
   applySettings();
   settingsTouch();
@@ -2270,8 +2269,8 @@ static const char *tuneDropAction(int slot) {
   cfg.tuneP[slot]  = 0;
   cfg.tuneF[slot]  = 0;
   cfg.tuneUsed    &= (uint16_t)~(1u << slot);
-  //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; the author
-  //  ruled on 2026-09-25 that hand corrections are never erased automatically,
+  //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; hand
+  //  corrections are never erased automatically,
   //  only by hand (tune.nudgeZero).
   applySettings();
   settingsTouch();
@@ -2283,7 +2282,7 @@ static const char *tuneDropAction(int slot) {
 //  THE AUTOMATIC SAMPLER'S TRIGGER (autoSampleTick), and it is deliberately timid.
 //
 //  Everything here is a reason NOT to measure. The machine is being listened to
-//  while this runs, the answer goes straight into the curve the author's dial
+//  while this runs, the answer goes straight into the curve the dial
 //  depends on, and nobody is watching the result - so every one of these gates
 //  is cheaper than a wrong sample.
 static const uint32_t AUTO_GAP_MS   = 300000;   // five minutes between attempts
@@ -2293,8 +2292,8 @@ static uint32_t gDialStill = 0;
 
 //  RUNG 2'S TRIGGER - when to go and re-index.
 //
-//  The author's rule, and it is better than correcting promptly:
-//  keep tracking while he is actually tuning, and go the moment he stops. The
+//  The rule, and it is better than correcting promptly:
+//  keep tracking while the knob is actually turning, and go the moment it stops. The
 //  readout returning to the clock IS the machine noticing the hand has left the
 //  knob, so the same signal that drives the display drives this.
 //
@@ -2440,7 +2439,7 @@ static void sampleTick() {
 
   //  THE PART WENT AWAY MID-MEASUREMENT. Said as what it is: the bins of a
   //  sweep that lost the RDA are not a spectrum, and "nothing found - a fixed
-  //  feature" was the wrong cause to send him looking for.
+  //  feature" was the wrong cause to be pointed at.
   if (Rda::lost()) {
     smpSay("ABANDONED: the RDA5807M stopped answering mid-measurement (%u failed transfers) - "
            "not a fixed feature; check its connector", (unsigned)Rda::busFailures());
@@ -2531,7 +2530,7 @@ static void updateDisplay() {
   //  sensor is what says "tuning is happening", so with the AS5600 absent this
   //  mode simply never triggers and the clock stays - which is the right
   //  failure, not a wrong reading.
-  //  MODE 2 ONLY, and that is the author's call. The AUTOMATIC
+  //  MODE 2 ONLY, by design. The AUTOMATIC
   //  readout obeys the amp and the source; mode 1 ("Tuning always") does not,
   //  because it is an explicit operator override and it is the instrument used
   //  to calibrate the shaft against the printed dial - a job done standing at
@@ -2546,8 +2545,8 @@ static void updateDisplay() {
   //  own clock - and the short ones on this machine are a brief source-reading
   //  glitch (the A32's readSource() is an undebounced median of 5) or a ~2 s
   //  link hiccup. Either would wipe a
-  //  dwell the author is in the middle of reading, and it would not come back
-  //  until he touched the knob again. The case a reset would protect against -
+  //  dwell that is in the middle of being read, and it would not come back
+  //  until the knob is touched again. The case a reset would protect against -
   //  a stale dwell surviving the amp coming back on - cannot happen, because an
   //  amp that has been off has been off far longer than four seconds.
   bool wantTuning = (cfg.showTuning == 1);
@@ -2571,8 +2570,8 @@ static void updateDisplay() {
     //  the Leditron shows the band and nothing else, pinning at the ends
     //  rather than displaying a frequency that has no station and no mark on
     //  the dial.
-    //  SNAP TO THE FM CHANNEL GRID - author's call: "if I'm at 91.3
-    //  and up the knob it should go from that to 91.5, not 91.4."
+    //  SNAP TO THE FM CHANNEL GRID, by design: from 91.3,
+    //  turning the knob up should go to 91.5, not 91.4.
     //
     //  In the Americas FM carriers sit on ODD tenths of a MHz - 87.9, 88.1, ...
     //  107.9 - 200 kHz apart, so an even tenth is not a station at all. The
@@ -2729,7 +2728,7 @@ static void setClockInteractive() {
 
 // ---------------------------------------------------------------------------
 //  LIMIT MONITOR (console `l`). The name is historical: there is one input
-//  left, the index sensor (Bible §11). A live view of it, four times a second;
+//  left, the index sensor (Hardware Bible). A live view of it, four times a second;
 //  the monitor drives nothing itself (the needle keeps doing what it was
 //  doing), so the sensor and its magnet can be proven by hand.
 //
@@ -3011,7 +3010,7 @@ void setup() {
   Con.printf ("  firmware %s (%s)\n", FW_VERSION, FW_COMMIT);
     Con.println(F("======================================================"));
 
-  pinMode(S3_AMP_SENSE, INPUT);      // loop() reads LOW = amp powered (the detector: Bible §7)
+  pinMode(S3_AMP_SENSE, INPUT);      // loop() reads LOW = amp powered (the detector: Hardware Bible)
 
   settingsLoad();
   purgeCorruptLimits();
@@ -3030,7 +3029,7 @@ void setup() {
   Display::begin();
   Panel::begin();
   Needle::begin();
-  //  The tuning auto-calibration instrument (Firmware Gospel §6). Harmless if the module
+  //  The tuning auto-calibration instrument (Firmware Gospel). Harmless if the module
   //  is absent - begin() records that and every command says so.
   Rda::begin();
   //  Recover which TURN the shaft is on. The sensor knows the angle exactly and
@@ -3212,7 +3211,7 @@ void loop() {
     int32_t a, b, c, d, shift;
     if (Needle::calTakeBand(a, b, c, d, shift)) {
       cfg.idxOnFwd = a; cfg.idxOffFwd = b; cfg.idxOnRev = c; cfg.idxOffRev = d;
-      //  SHIFT THE LIMITS WITH THE FRAME rather than telling him to re-set
+      //  SHIFT THE LIMITS WITH THE FRAME rather than requiring a manual re-set of
       //  them. calFinishBand() moved the position frame by `shift`, and the
       //  soft limits are PHYSICAL marks - a point at P in the old frame is at
       //  P - shift in the new one. Asking for a manual re-set is what made the
@@ -3342,7 +3341,7 @@ void loop() {
                 Display::setBrightness(cfg.brightOn); settingsTouch();
                 Con.printf("  brightness %u\n", cfg.brightOn); break;
       case 'f': case 'F': {
-                //  THREE choices, not two. `!showTuning` collapsed the author's
+                //  THREE choices, not two. `!showTuning` collapsed the
                 //  "tuning while tuning" mode to 0 with no console route back.
                 cfg.showTuning = (cfg.showTuning + 1) % 3; settingsTouch();
                 static const char *n[] = { "the clock", "TUNING", "tuning while tuning" };
@@ -3387,7 +3386,7 @@ void loop() {
       case 'u': Needle::jogRaw(  200, 200, true ); break;   // MICRO, forward
       case 'U': Needle::jogRaw( -200, 200, true ); break;   // MICRO, reverse
       case 'l': case 'L': limitMonitor(); break;
-      // ---- RDA5807M (Firmware Gospel §6) -----------------------------
+      // ---- RDA5807M (Firmware Gospel) -----------------------------
       //  THE INSTRUMENT BY HAND: does the part answer and where should the LO
       //  be (R), a wide or narrow sweep (q, v) and its bins (a), the learned
       //  fixed features (o, O). None of these stores a tuning sample; V does.
@@ -3461,7 +3460,7 @@ void loop() {
         //  while this handler printed "marked as a fixed feature" regardless:
         //  the ninth press reported success and discarded the value. That is
         //  this project's fourth "refusal painted green", and persistence makes
-        //  it worse, because the author stops re-teaching and stops watching.
+        //  it worse, because re-teaching and watching both stop.
         if (Rda::isSpur(f)) {
           Con.printf("  %d.%d is already known - nothing to do.\n", f / 10, f % 10);
           break;
@@ -3517,7 +3516,7 @@ void loop() {
       //  FOR A TRANSMITTER THAT RADIATES NOTHING WHILE THE RECEIVER WORKS (a
       //  diagnostic). Erase the RF
       //  calibration ESP-IDF keeps in NVS and let it calibrate from scratch on
-      //  the next boot. Nothing the author has calibrated lives in that blob -
+      //  the next boot. Nothing calibrated lives in that blob -
       //  it is the radio's own trim, in its own namespace, not "amb3" and not
       //  "net". If this is not it, the cost was one reboot.
       case 'z': {

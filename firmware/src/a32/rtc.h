@@ -1,13 +1,13 @@
 // ============================================================================
 //  AMBERSONG  -  DS3231 REAL TIME CLOCK  (A32)
 //
-//  The RTC hangs off the AUDIO MCU (Bible §5) and the display off the MAIN one,
+//  The RTC hangs off the AUDIO MCU (Hardware Bible) and the display off the MAIN one,
 //  so the time crosses the UART. The S3 keeps its own software clock and
 //  re-syncs it from this one every minute, so a slow or missing link never
 //  makes the display stutter.
 //
 //  PINS: A32_RTC_SDA / A32_RTC_SCL and the bus speed A32_I2C_HZ are in pins.h;
-//  what they are wired to is in the Bible (§3, §5).
+//  what they are wired to is in the Hardware Bible.
 //
 //  EVERYTHING HERE IS UTC. The S3 applies the timezone, because the S3 is the
 //  one with NTP and a portal. Storing local time in an RTC means the hour after

@@ -1,11 +1,11 @@
 // ============================================================================
 //  AMBERSONG  -  DIAL NEEDLE  (S3)
 //
-//  REWRITTEN 2026-08-30 around two decisions the author made on the bench:
+//  REWRITTEN 2026-08-30 around two decisions made on the bench:
 //
 //  1. THE MOTION COMES FROM AN EARLIER TEST RIG (now retired). Its numbers took
 //     a session and four firmware bugs to find; the design is in Firmware
-//     Gospel §5. DO NOT RE-TUNE BY EYE.
+//     Gospel. DO NOT RE-TUNE BY EYE.
 //
 //     second-order  every move but the park: wn 9, zeta 0.50, ~5 deg
 //                   overshoot, ~300 ms ring; 1100 hsps / 18000 hsps^2
@@ -22,7 +22,7 @@
 //     reaching a number".
 //
 //  2. NO LIMIT SWITCHES AT ALL. One A3144 as a mid-travel INDEX MARK, not an
-//     end-stop. The author measured that this motor does not lose steps at the
+//     end-stop. Measured: this motor does not lose steps at the
 //     settled configuration, so absolute position is maintained by counting and
 //     re-referenced whenever the index is crossed.
 //
@@ -122,7 +122,7 @@ bool    recovering();
 
 //  True while the emitter is producing steps that go nowhere - the signature of
 //  a hunt, stated WITHOUT a cause, because the cause differs every time. What
-//  found the wobble of 2026-09-10 was the author watching the ULN2003's LEDs
+//  found the wobble of 2026-09-10 was watching the ULN2003's LEDs
 //  while the status line reported the needle stationary; this is the machine
 //  being able to notice that for itself.
 bool    hunting();
@@ -189,7 +189,7 @@ void setDial(uint16_t dialLow, uint16_t dialHigh);
 //  "tune chain" line, and both mark actions - each
 //  rebuilding `bandLow + permille * span / 1000` from the same two constants.
 //  While the model was a straight line they agreed by construction. It is not
-//  a straight line (the author's own station readings: local slope runs 0.251
+//  a straight line (this set's own station readings: local slope runs 0.251
 //  tenths/permille at 91-98 MHz and 0.288 at 98-107, so a line fitted to the
 //  ends misses the middle by half a megahertz). A curve computed six times is
 //  a curve that will be computed six different ways.
@@ -224,7 +224,7 @@ float   tuneFreq10f();
 void    curveDomain(int32_t &lo, int32_t &hi);
 void getGeometry(int32_t &posMin, int32_t &posMax);
 
-//  The four numbers from the author's calibration: for each side, the position
+//  The four numbers from the band calibration: for each side, the position
 //  at which the sensor releases and at which it operates. Half-steps, relative
 //  to the homed zero. onFwd is the edge homing uses.
 void setIndexCal(int32_t onFwd, int32_t offFwd, int32_t onRev, int32_t offRev);
@@ -272,7 +272,7 @@ uint32_t indexCrossings();
 
 
 //  Why homing gave up, or "" if it has not. The console printed this once and
-//  then it was gone; the author cannot sit on a serial cable, so it has to
+//  then it was gone; nobody can sit watching a serial cable forever, so it has to
 //  survive somewhere the portal can read it.
 const char *faultReason();
 

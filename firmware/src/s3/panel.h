@@ -2,11 +2,11 @@
 //  AMBERSONG  -  RADIO PANEL LIGHT CONTROL (RPLC)  (S3, GPIO21)
 //
 //  The lamps behind the dial, one PWM output (S3_PANEL_PWM) switching them
-//  together; the lamp circuit is in Bible §11. 1 kHz PWM: far above flicker
+//  together; the lamp circuit is in Hardware Bible. 1 kHz PWM: far above flicker
 //  fusion, and low enough that the switching edges stay a negligible fraction
 //  of the period.
 //
-//  AUTHOR'S RULES (defaults in brackets)
+//  RULES (defaults in brackets)
 //    amp off                  -> dark
 //    RADIO, dial being turned -> the tuning level (255, full)
 //    RADIO, dial idle 5 s     -> the idle level (128, 50%)

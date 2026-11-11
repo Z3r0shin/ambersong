@@ -5,12 +5,12 @@
 //  RDA5807M — reading the tube set's own local oscillator.
 //
 //  WHAT THIS IS FOR, because it is easy to mistake for a radio.
-//  It is not a receiver for the author. It is an instrument that measures where
+//  It is not a receiver to listen to. It is an instrument that measures where
 //  the tube set is tuned, by finding the set's LOCAL OSCILLATOR and adding the
 //  intermediate frequency back on. That gives a (shaft angle, frequency) pair
 //  at ANY dial position, with no station to identify and nothing to type - the
 //  same kind of pair the manual marks produce, so it feeds the same table and
-//  the same fit. See Firmware Gospel §6.
+//  the same fit. See Firmware Gospel.
 //
 //  FOUND ON THE BENCH, 2026-09-04:
 //    station = LO + IF                LOW-SIDE injection. An earlier design note
@@ -43,7 +43,7 @@ namespace Rda {
 static const int16_t LO_WINDOW_LO10 = 772;
 static const int16_t LO_WINDOW_HI10 = 972;
 //  THE IF IS NOT A CONSTANT ANY MORE - it lives in cfg.ifOffset20, in 50 kHz
-//  units, default 212 (10.60 MHz, Bible §22), because it is a property of THIS
+//  units, default 212 (10.60 MHz, Hardware Bible), because it is a property of THIS
 //  set's IF strip and not of the design. 214 is the nominal 10.7 in those
 //  units. Nothing reads this constant: it is documentation only.
 static const int16_t IF_OFFSET20_NOMINAL = 214;   // low-side, nominal only

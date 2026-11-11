@@ -1,11 +1,11 @@
 // ============================================================================
 //  AMBERSONG  -  STEPPER DRIVE LAYER  (S3)
 //
-//  Ported from an earlier test rig (not published), where it was measured.
-//  That rig is retired; the motion design is in Firmware Gospel §5.
+//  Ported from an earlier test rig, where the motion was measured. The motion
+//  design is in the Firmware Gospel.
 //
 //  Turns a position in FINE UNITS into four PWM duties. Nothing above this file
-//  knows a ULN2003 exists (the driver and motor: Bible §11).
+//  knows a ULN2003 exists (the driver and motor: Hardware Bible).
 //
 //  WHY EVERYTHING GOES THROUGH LEDC EVEN AT 100% DUTY
 //  It is the only way to microstep a unipolar motor on a dumb Darlington array,
@@ -18,7 +18,7 @@
 //  a mask and four table lookups.
 //
 //  COIL MAPPING. The firmware drives IN1/IN3 as the two opposed halves of one
-//  phase and IN2/IN4 as the halves of the other (the wiring: Bible §11). A
+//  phase and IN2/IN4 as the halves of the other (the wiring: Hardware Bible). A
 //  unipolar half-coil conducts one way only, so a signed sinusoid becomes two
 //  rectified ones on opposite windings:
 //
@@ -76,8 +76,8 @@ bool energised();
 //  phase drives the needle toward LOW FM.
 void setInvert(bool on);
 
-//  Percent of full duty. needle.cpp sets 100 for the motor supply the Bible
-//  records (§11). It is a parameter rather than a constant so a higher supply
+//  Percent of full duty. needle.cpp sets 100 for the motor supply the Hardware Bible
+//  records. It is a parameter rather than a constant so a higher supply
 //  could be derated here; this build never changes it.
 void setDutyPct(uint8_t pct);
 

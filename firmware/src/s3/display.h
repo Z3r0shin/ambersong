@@ -2,14 +2,14 @@
 //  AMBERSONG  -  LEDITRON DISPLAY  (S3)
 //
 //  Four multiplexed digits, one lit at a time, 100 Hz frame. The timing was
-//  proven under WiFi load on the bench (Firmware Gospel §4).
+//  proven under WiFi load on the bench (Firmware Gospel).
 //
 //  THE 825 us DEAD TIME IS NOT OPTIONAL AND IS NOT A GUESS.
 //  Blanking the segments is not enough: the outgoing digit's high-side switch
-//  (Bible §9) is still conducting when the next digit is enabled, and without
+//  (Hardware Bible) is still conducting when the next digit is enabled, and without
 //  the dead time the display ghosts badly. 825 us was found by test on the
-//  machine. The author judged the resulting brightness fine and decided against
-//  a driver change to recover the lost duty - do not re-raise it unless the
+//  machine. The resulting brightness was judged fine, so there is no
+//  driver change to recover the lost duty - do not re-raise it unless the
 //  display is later called too dim.
 //
 //  TIMING, and why the numbers are what they are
@@ -23,7 +23,7 @@
 //  BRIGHTNESS SHORTENS THE LIT WINDOW, NEVER THE SLOT. The frame rate is
 //  therefore constant and dimming introduces no flicker. Two consequences worth
 //  knowing: 255 is the MAXIMUM - there is nowhere up to go - and the COLON is
-//  not driven by the firmware (Bible §8), so it does not dim with the digits.
+//  not driven by the firmware (Hardware Bible), so it does not dim with the digits.
 //  The dimmer you set the digits, the more the colon stands out.
 //
 //  ONLY ONE DIGIT IS EVER ON. Structural, not discipline: the ISR clears the

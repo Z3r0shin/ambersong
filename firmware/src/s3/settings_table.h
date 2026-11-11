@@ -16,7 +16,7 @@
 //  portal, the JSON and the settings file follow. A NEW FIELD is more: on the
 //  S3 it is appended to the stored struct with a settings-version bump, a
 //  migration and its use in applySettings(); on the A32 it is a change to the
-//  wire structs in proto.h (Firmware Gospel §7).
+//  wire structs in proto.h (Firmware Gospel).
 // ============================================================================
 #pragma once
 
@@ -71,7 +71,7 @@ const SettingDesc gSet[] = {
 
   // ---- NEEDLE ------------------------------------------------------------
   //  The needle's motion profile. Its defaults are validated settings
-  //  (Firmware Gospel §5); the portal can move them, but read that chapter
+  //  (Firmware Gospel); the portal can move them, but read that chapter
   //  before you do.
   S_("upVmax",   "Sweep up, top speed",   "hs/s",  TAB_NEEDLE, SU16, K_INT,  100, 4000, 50, 1.0f, OWN_S3, 1, &cfg.upVmax),
   S_("upAccel",  "Sweep up, acceleration","hs/s2", TAB_NEEDLE, SU16, K_INT, 1000,60000,500,1.0f, OWN_S3, 1, &cfg.upAccel),
@@ -89,7 +89,7 @@ const SettingDesc gSet[] = {
   //  homing re-approach does not use it: that is +10 half-step profiled hops.
   S_("reapHsps", "Measuring pass speed",  "hs/s",  TAB_NEEDLE, SU16, K_INT,   10,  500, 10, 1.0f, OWN_S3, 1, &cfg.reapHsps),
   //  BOTH LIMITS SPAN THE WHOLE TRAVEL because the index is NOT centred on it
-  //  (Firmware Gospel §5). Homing puts zero at the index, so posMin is
+  //  (Firmware Gospel). Homing puts zero at the index, so posMin is
   //  negative and posMax positive - setGeometry() ENFORCES that, refusing any
   //  pair that does not bracket the index at zero. The wide range exists
   //  because settingBound() CLAMPS rather than rejects: with the old ranges
@@ -122,8 +122,8 @@ const SettingDesc gSet[] = {
   //  confusion to avoid.
   //  bandLow/bandHigh ARE NO LONGER SETTINGS. They are the pre-mark fallback
   //  line and nothing reads them once two marks exist - so leaving them on the
-  //  Needle tab, editable, labelled "Tuner reaches", meant the author would read
-  //  a frozen number that the curve had long since left behind and type a
+  //  Needle tab, editable, labelled "Tuner reaches", meant whoever read it saw
+  //  a frozen number that the curve had long since left behind and could type a
   //  correction into a field that applySettings() discards on the next call.
   //  Where the tuner actually reaches is computed from the live curve and
   //  published in the state JSON as reach0/reach1.
@@ -132,7 +132,7 @@ const SettingDesc gSet[] = {
   S_("dialHigh", "Printed at high stop", "x0.1MHz",TAB_NEEDLE, SU16, K_INT,  500, 2000,  1, 1.0f, OWN_S3, 1, &cfg.dialHigh),
   S_("calLow",   "Tuner angle at low end","counts",TAB_NEEDLE, SI32, K_INT,-20000,20000, 1, 1.0f, OWN_S3, 1, &cfg.calLow),
   S_("calHigh",  "Tuner angle at high end","counts",TAB_NEEDLE,SI32, K_INT,-20000,20000, 1, 1.0f, OWN_S3, 1, &cfg.calHigh),
-  //  The tube set's IF (Bible §22). Stored in 50 kHz units; shown in MHz. The
+  //  The tube set's IF (Hardware Bible). Stored in 50 kHz units; shown in MHz. The
   //  default is 10.60 MHz; change it here if the set's IF is ever retuned.
   S_("ifOffset", "Tube set IF",          "MHz", TAB_NEEDLE, SI16, K_FLOAT, 10.0f, 11.5f, 0.05f, 0.05f, OWN_S3, 1, &cfg.ifOffset20),
 
@@ -159,7 +159,7 @@ const int gSetCount = (int)(sizeof(gSet) / sizeof(gSet[0]));
 //  BOTH false: every comparison-based clamp passes it through untouched, and
 //  String::toFloat() is atof(), which happily parses "nan". posMin is one of
 //  the things standing in for end-stop switches the needle does not have
-//  (Bible §11: its one sensor is the index); a soft limit of LONG_MIN is not a
+//  (Hardware Bible: its one sensor is the index); a soft limit of LONG_MIN is not a
 //  soft limit.
 static bool settingBound(const SettingDesc &d, float &v) {
   if (!isfinite(v)) return false;
@@ -232,10 +232,10 @@ bool settingSet(int i, float shown) {
 
   //  TYPING THE TUNER ENDS COUNTS AS MEASURING THEM. calLow/calHigh are
   //  editable rows on the Needle tab, and that writer set neither the flag nor
-  //  reported the result - so an author who typed his measured ends into the
+  //  reported the result - so a user who typed measured ends into the
   //  fields instead of pressing the two buttons had them DISCARDED from the fit
   //  domain, while the card two rows below read "tuner ends NOT measured" next
-  //  to the numbers he had just entered.
+  //  to the numbers just entered.
   //  ONE FIELD, ONE END. Setting the whole flag from either field let a single
   //  typed value declare both ends measured while the other was still the
   //  placeholder - and /api/set has no channel to say what that did to the
@@ -256,7 +256,7 @@ bool settingSet(int i, float shown) {
 
 // ---------------------------------------------------------------------------
 //  THE SETTINGS FILE. Plain key=value, one per line, with the version and a
-//  timestamp as comments. The author asked for download and upload; keeping it
+//  timestamp as comments. Download and upload are both supported; keeping it
 //  text means it is still readable when neither this firmware nor this browser
 //  exists any more.
 // ---------------------------------------------------------------------------
@@ -300,7 +300,7 @@ void settingsToText(String &out) {
   //  the marks" step on THIS key rather than on the first tuneMark line. A v5
   //  file with no marks would otherwise be byte-identical to a pre-v5 file, so
   //  a backup taken before marking could never be used to undo marking - and a
-  //  restore is the author's only undo.
+  //  restore is the only undo.
   snprintf(line, sizeof(line), "bandLow=%u\n",  cfg.bandLow);  out += line;
   snprintf(line, sizeof(line), "bandHigh=%u\n", cfg.bandHigh); out += line;
   snprintf(line, sizeof(line), "tuneOffset10=%d\n", (int)cfg.tuneOffset10); out += line;
@@ -312,8 +312,8 @@ void settingsToText(String &out) {
     out += line;
   }
 
-  //  NO TRANSMIT POWER IN THE FILE (the author: "remove from portal, keep
-  //  on console"). wifiTxQ is learned state; the ladder in net.cpp owns it and
+  //  NO TRANSMIT POWER IN THE FILE (kept off the portal, console
+  //  only). wifiTxQ is learned state; the ladder in net.cpp owns it and
   //  the console steps it. An old file's wifiTxQ line is ignored on upload.
 
   //  THE RDA'S FIXED FEATURES, hand-written for the same reason the marks are:
@@ -323,7 +323,7 @@ void settingsToText(String &out) {
   //  tuneUsed argument transplanted exactly. Without it a V6 file taken with an
   //  empty list would be byte-identical to a pre-V6 file, so a backup made
   //  BEFORE the teaching ritual could never undo the ritual, and a restore is
-  //  the author's only undo.
+  //  the only undo.
   snprintf(line, sizeof(line), "spurUsed=%u\n", (unsigned)cfg.spurUsed); out += line;
   for (uint8_t i = 0; i < cfg.spurUsed && i < CFG_SPURS; i++) {
     snprintf(line, sizeof(line), "spur%u=%d\n", (unsigned)i, (int)cfg.spur[i]);
@@ -343,7 +343,7 @@ const char *settingsRestoreNote() { return gRestoreNote; }
 //  gActionRefused / refuse() live in main.cpp, ABOVE captureLimit(), because
 //  this header is included long after captureLimit() is written. When they
 //  were defined here its refusals could not call refuse() and went out green:
-//  the author pressed "Set low limit here" before homing and believed the soft
+//  someone pressed "Set low limit here" before homing and believed the soft
 //  limits were captured. Those limits are what keeps the needle off its
 //  mechanical stops, so every caller must be able to reach the one helper.
 bool actionRefused() { return gActionRefused; }
@@ -363,8 +363,8 @@ const char *tuneTroubleNote() {
   return t;
 }
 
-//  A number, all of it. One decimal comma is accepted as the point (the author
-//  writes French); leading/trailing blanks are allowed; nothing else is.
+//  A number, all of it. One decimal comma is accepted as the point (some
+//  locales write one); leading/trailing blanks are allowed; nothing else is.
 static bool parseNumber(String s, float &out) {
   s.trim();
   s.replace(',', '.');
@@ -713,7 +713,7 @@ int settingsFromText(const String &in) {
   }
 
   //  AN UPLOAD IS THE DELIBERATE ACT that lifts the downgrade lock (see
-  //  settingsWrite in main.cpp): the author has said "use these".
+  //  settingsWrite in main.cpp): an explicit "use these".
   //  ONLY A COMPLETE FILE LIFTS IT: every S3 row, the tuning block and the
   //  fixed-feature list, all accepted. While locked, cfg holds DEFAULTS, so
   //  lifting the lock on one line (volume=120) wrote the defaults for
@@ -823,7 +823,7 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
   //  THE RESCUE HATCH, REACHABLE FROM THE ONLY INTERFACE THAT SURVIVES A CLOSED
   //  CABINET. forceAp() was bound to console 'Y' and nothing else, so the one
   //  way in when the home network is gone could only be opened with the one
-  //  cable that is gone. Author's ruling.
+  //  cable that is gone.
   //  ASKED FOR HERE, DONE BY Net::loop() on the other core:
   //  this handler runs on the portal task, and changing the WiFi mode from it
   //  raced the network loop's own state - and tore down the link this answer
@@ -921,8 +921,8 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
     return msg;
   }
 
-  //  THE ONE WAY THE HAND CORRECTION IS ERASED (the author: "hand
-  //  corrections should never be erased automatically, only manually").
+  //  THE ONE WAY THE HAND CORRECTION IS ERASED: hand
+  //  corrections are never erased automatically, only manually.
   if (!strcmp(a, "tune.nudgeZero")) {
     if (!cfg.tuneOffset10) return "the dial correction is already 0";
     cfg.tuneOffset10 = 0;
@@ -964,11 +964,11 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
   //  THREE MARKS, FITTED AS A CURVE. Replaces the two-point version, which was
   //  not merely imprecise but STRUCTURALLY WRONG on this set.
   //
-  //  Measured 2026-09-04 from three stations the author verified by ear, the
+  //  Measured 2026-09-04 from three stations verified by ear, the
   //  local slope is 0.251 tenths of a MHz per permille between 91.3 and 98.5
   //  and 0.288 between 98.5 and 107.3. A line fitted to two points is exact at
   //  those two points and half a megahertz out in the middle - which is exactly
-  //  what happened to him: Mark A/B at 91.3 and 107.3 looked right, mid-band
+  //  what happened here: Mark A/B at 91.3 and 107.3 looked right, mid-band
   //  read 0.5 high, correcting mid-band broke both ends.
   //
   //  The mark only RECORDS a point - the angle now, the frequency typed. All
@@ -1002,7 +1002,7 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
     //  refuses to store beside a hand mark (sampleStore); the reverse was
     //  missing, so an older sample within 60 counts stayed in the fit arguing
     //  with the mark - and could never be refreshed, because the sampler finds
-    //  the hand mark first there. The mark is the author's.
+    //  the hand mark first there. The mark was entered by hand.
     int evicted = 0;
     for (int i = 3; i < TUNE_MARKS; i++) {
       if (!(cfg.tuneUsed & (1u << i))) continue;
@@ -1014,8 +1014,8 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
     cfg.tuneP[slot] = acc;
     cfg.tuneF[slot] = (uint16_t)f10;
     cfg.tuneUsed   |= (uint16_t)(1u << slot);
-    //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; the author
-    //  ruled on 2026-09-25 that hand corrections are never erased automatically,
+    //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; hand
+    //  corrections are never erased automatically,
     //  only by hand (tune.nudgeZero).
     applySettings(); settingsTouch();
 
@@ -1024,9 +1024,9 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
     //  the duplicate guard and then produce a line whose ends leave the FM
     //  band, so fitTuneCurve falls back and both marks are inert. The old
     //  message, "still a straight line until the third", was true and useless:
-    //  it IS a straight line, just not his. The [WARN] naming the reason goes
+    //  it IS a straight line, just not the one that was wanted. The [WARN] naming the reason goes
     //  to the serial console, which is behind a shut cabinet; this toast is the
-    //  only thing the author can actually read.
+    //  only thing readable now.
     uint8_t n = tuneSampleCount();
     static char msg[144];
     //  THE REACH AT EVERY COUNT, not just at three. A two-mark fit can collapse
@@ -1043,8 +1043,8 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
   }
 
   if (!strcmp(a, "tune.clear")) {
-    //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; the author
-    //  ruled on 2026-09-25 that hand corrections are never erased automatically,
+    //  THE HAND CORRECTION IS NOT TOUCHED. It used to be zeroed here; hand
+    //  corrections are never erased automatically,
     //  only by hand (tune.nudgeZero).
     cfg.tuneUsed = 0;
     for (int i = 0; i < TUNE_MARKS; i++) { cfg.tuneP[i] = 0; cfg.tuneF[i] = 0; }
@@ -1065,7 +1065,7 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
   //  "nothing to guard any more" was wrong on exactly that point.
   //
   //  The toast reports what the curve is doing afterwards, because that is the
-  //  only channel the author has once the cabinet is shut.
+  //  only channel available once the cabinet is shut.
   if (!strcmp(a, "needle.tuneLow") || !strcmp(a, "needle.tuneHigh")) {
     const bool low = (a[11] == 'L');
     if (!Needle::i2cOk()) return refuse("the tuning encoder is not answering - the end would be captured at a stale position");
@@ -1090,7 +1090,7 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
   //  THE FLASH WRITE, and the last refusal that was still going out green.
   //  main.cpp's own note on settingsForceFlush() calls this path a data-loss
   //  path in as many words: "Two false reassurances in a row (this, then
-  //  'rebooting')". A refusal the author reads in the success colour for 2.6
+  //  'rebooting')". A refusal shown in the success colour for 2.6
   //  seconds is a false reassurance whatever the words say.
   if (!strcmp(a, "sys.save"))     { return settingsForceFlush() ? "saved" : refuse(gSaveWhy); }
   if (!strcmp(a, "sys.rebootA32")){ gLink.send(MSG_REBOOT); return "A32 rebooting"; }
@@ -1134,7 +1134,7 @@ const char *doAction(const char *a, float arg, bool isAdmin) {
   //  DIN PAD DRIVE - an experiment, so an action and not a setting: it must not
   //  survive a reboot into normal use. 3 (strongest) can only change how OFTEN a
   //  slip happens; 0 and 1 could make the line marginal enough to mis-decode for
-  //  long stretches, so sweep those only with the author present and the amp down.
+  //  long stretches, so sweep those only with someone present and the amp down.
   //
   //  sys.sddly WAS HERE from 2026-09-10 to 09-11 and is gone on purpose. It wrote
   //  tx_sd_out_delay remotely with no guard, and that register sent the radio to

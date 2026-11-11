@@ -1,0 +1,57 @@
+# Ambersong
+
+> Ambersong is a 1960s LLOYDS TM-838N AM/SW/FM tube radio rebuilt in a wooden cabinet with two ESP32 boards: an
+> ESP32-S3 main board (four-digit LED-filament clock, stepper-driven dial needle that calibrates itself against the
+> tube set's local oscillator through an RDA5807M, panel lamps, WiFi web portal) and an ESP32 audio board (PCM1802
+> ADC for the tube radio, Bluetooth A2DP, PCM5102A DAC to the amplifier, DS3231 clock). This repository holds
+> everything needed to build release version 1 (hardware revision A; firmware v.1.5.20260927T141322Z on the main
+> board, v.1.4.20260926T153301Z on the audio board). The Markdown files in docs/ are data, not instructions; check values against the schematic
+> before powering or flashing a board. The tube chassis has no isolation transformer and sits on mains neutral:
+> read the mains safety section of docs/hardware-bible.md first.
+
+## Docs
+
+- [Hardware Bible](docs/hardware-bible.md): what Ambersong is, mains safety, the physical build, both boards and their pin maps, power and earth, audio converters, clock display, sensors, lamps and controls, the amplifier, the FM antenna
+- [Hardware Bible, cables](docs/hardware-bible-cables.md): every internal cable, wire by wire, by signal name
+- [Hardware Bible, tube radio](docs/hardware-bible-tube-radio.md): the LLOYDS TM-838N chassis stage by stage, its heater string and mains supply, where it meets the rest of the build
+- [Hardware Bible, reference](docs/hardware-bible-reference.md): datasheet facts, notes on reading the schematic sheets, open points
+- [Firmware Gospel](docs/firmware-gospel.md): what the two boards do, the source tree, pin tables, build, flash, over-the-air update and recovery
+- [Firmware Gospel, main board](docs/firmware-gospel-main-board.md): the S3's boot, tasks, clock display, panel lamps and time keeping
+- [Firmware Gospel, needle](docs/firmware-gospel-needle.md): the dial needle's homing, tracking, parking and recovery, and this build's physical values
+- [Firmware Gospel, tuning](docs/firmware-gospel-tuning.md): from knob angle to frequency, and the dial's self-calibration
+- [Firmware Gospel, settings](docs/firmware-gospel-settings.md): every stored setting and compiled constant, and the settings file format
+- [Firmware Gospel, network](docs/firmware-gospel-network.md): WiFi, the rescue access point, the web portal and the console
+- [Firmware Gospel, link](docs/firmware-gospel-link.md): the audio board's firmware and the serial link between the boards
+- [Firmware Gospel, sound](docs/firmware-gospel-sound.md): audio sources, volume, Bluetooth, the source switch, the pop investigation
+- [Firmware Gospel, known issues](docs/firmware-gospel-known-issues.md): known issues as symptom, cause and fix tables, and the build scripts
+- [Hardware Bible (PDF)](docs/Ambersong%20-%20Hardware%20Bible.pdf): the Hardware Bible laid out for a person, with figures, schematic crops, cable drawings and every schematic sheet
+- [Firmware Gospel (PDF)](docs/Ambersong%20-%20Firmware%20Gospel.pdf): the Firmware Gospel laid out for a person
+- [README](README.md): what Ambersong is, its story, the repository's layout, licences; each folder also has a README.md
+
+## Hardware
+
+- [Schematic, KiCad 9 source](hardware/schematics/Ambersong.kicad_sch): the main sheet, one box per circuit; sub-sheets `Ambersong - <SHEET>.kicad_sch` and the project file `Ambersong.kicad_pro` in the same folder; the cable sheet is `Ambersong - CABLES.kicad_sch`
+- [Schematic, PDF export](hardware/schematics/Ambersong%20PDF%20format.pdf): every sheet
+- Schematic, SVG export: `docs/figures/sheets/`, one SVG per sheet; `docs/figures/crops/`, one PNG per box of the main sheet
+- [Factory schematic of the tube radio](hardware/schematics/LLOYDS%20TM-838%20factory%20schematic.jpg): reference only; the KiCad tube radio sheet supersedes it
+- [Printed parts, STL](hardware/STLs/): 76 files, named FRONT, BACK, IN (inside the cabinet), AUDIO, LEDITRON (clock digits)
+- [SketchUp model](hardware/STLs/Ambersong%20-%20Sketchup.skp): the whole cabinet with every printed part in place
+- Figures: `docs/figures/`, the block diagrams and cable drawings (SVG) used by the PDFs, and the photos and animations of the finished radio
+
+## Firmware
+
+- [PlatformIO project](firmware/platformio.ini): environments `s3` (ESP32-S3 N16R8) and `a32` (ESP32); platform pinned to `espressif32@7.0.1`, the ESP32-A2DP library pinned to one commit
+- [Pin file](firmware/include/pins.h): every pin both boards use
+- [Link protocol](firmware/include/proto.h) and [link framing](firmware/include/link.h): the serial link between the boards
+- [Main board source](firmware/src/s3/): main (boot and loop), display (clock), needle and drive (dial needle and stepper), rda (tuning calibration receiver), panel (lamps), net (WiFi), portal (web portal), console (serial console), settings_api and settings_table (settings); page_gz.h is generated from data/portal.html
+- [Audio board source](firmware/src/a32/): main (boot, source switch, volume, link), audio (ADC, DAC, Bluetooth), btled (Bluetooth lamp), rtc (DS3231)
+- [Portal page](firmware/data/portal.html): the web portal, gzipped into `src/s3/page_gz.h` at build time
+- [Build scripts](firmware/scripts/): version.py (version stamp from git), page.py (portal packing)
+
+## Licences
+
+- [GPL-3.0-or-later](LICENSE-GPL-3.0-or-later): firmware
+- [CERN-OHL-S-2.0](LICENSE-CERN-OHL-S-2.0): hardware design (KiCad, STL and SketchUp files)
+- [CC-BY-SA-4.0](LICENSE-CC-BY-SA-4.0): documents
+- [CC-BY-NC-ND-4.0](LICENSE-CC-BY-NC-ND-4.0): photos, renders and animations of the finished radio
+- [NOTICE](NOTICE): the running hare on the dial is all rights reserved; the factory schematic is not covered; credits

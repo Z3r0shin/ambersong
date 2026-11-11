@@ -28,14 +28,14 @@ ESP32-A2DP library to one commit. Do not update either without re-testing everyt
 ## Everything else
 
 Flashing, the first boot, the portal, updates over the air, recovery, every setting and the reason
-behind each design decision are in the Firmware Gospel: the [Human Readable edition](../docs/Ambersong%20-%20Firmware%20Gospel%20-%20Human%20Readable.pdf)
-([chapters](../docs/human/firmware-gospel/)) or the complete [LLM edition](../docs/llm-edition/FIRMWARE-GOSPEL.md).
-Start with its chapter 3 to build and flash from a clean PC, and its chapter 1 if the radio
-misbehaves. What each pin is wired to is in the Hardware Bible,
-the [Hardware Bible](../docs/Ambersong%20-%20Hardware%20Bible%20-%20Human%20Readable.pdf)
-([chapters](../docs/human/hardware-bible/), [LLM edition](../docs/llm-edition/HARDWARE-BIBLE.md)).
+behind each design decision are in the Firmware Gospel: the [PDF](../docs/Ambersong%20-%20Firmware%20Gospel.pdf),
+or [`docs/firmware-gospel.md`](../docs/firmware-gospel.md) and the files it links, for an LLM. What each pin is
+wired to is in the Hardware Bible: the [PDF](../docs/Ambersong%20-%20Hardware%20Bible.pdf), or
+[`docs/hardware-bible.md`](../docs/hardware-bible.md).
 
-Pins, sensor directions, the tuner's travel and the needle's limits are those of the author's
-radio. Expect to change them for yours: the Gospel says where each one lives.
+Pins, sensor directions, the tuner's travel and the needle's limits are those of this radio. Expect to change
+them for yours: the Gospel says where each one lives.
 
-Licence: GPL-3.0-or-later (see [`../LICENSE`](../LICENSE)).
+Licence: GPL-3.0-or-later ([`LICENSE-GPL-3.0-or-later`](../LICENSE-GPL-3.0-or-later)).
+
+Back to the [README](../README.md).

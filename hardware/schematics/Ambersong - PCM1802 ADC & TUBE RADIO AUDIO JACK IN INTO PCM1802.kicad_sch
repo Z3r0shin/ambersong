@@ -1345,6 +1345,16 @@
 		)
 		(uuid "f411ba96-5c12-4b75-9218-d35c432cf838")
 	)
+	(label "GND"
+		(at 163.83 105.41 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "08661e4b-5c9b-4a3e-ad40-81afe0970cc3")
+	)
 	(label "ATTENUATOR"
 		(at 154.94 77.47 0)
 		(effects
@@ -1424,16 +1434,6 @@
 			(justify left bottom)
 		)
 		(uuid "c3c10d89-4539-489e-ae31-040b671cd54e")
-	)
-	(label "ATTENUATOR"
-		(at 163.83 105.41 90)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "e02657ff-fe71-46f3-b5ab-d606c7a59b4d")
 	)
 	(label "SCK"
 		(at 148.59 110.49 90)

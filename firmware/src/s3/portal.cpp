@@ -55,7 +55,7 @@ static void otaWatchdog() {
 // ---------------------------------------------------------------------------
 //  USERS
 //
-//  Four slots. Slot 0 is the author: it cannot be deleted and cannot be demoted,
+//  Four slots. Slot 0 is the administrator: it cannot be deleted and cannot be demoted,
 //  because a machine with no administrator is a machine that needs a cable.
 //  Everyone else is a normal user - see the roles note in settings_table.h for
 //  what that means, which is "the music and the lights, not the machine".
@@ -92,9 +92,9 @@ static void usersSave() {
 }
 
 //  THE SHIPPED CREDENTIALS ARE A PLACEHOLDER, NOT A SECRET.
-//  They used to be the author's real name and real password, compiled into the
-//  image - which was defensible while the tree lived on his disk and stopped
-//  being defensible the moment it became a git repository he intends to push.
+//  Real credentials compiled into the image would be defensible only while
+//  the tree stayed private, and not once it became a git repository meant
+//  to be pushed.
 //  Now the firmware knows only "admin"/"admin", and the portal refuses
 //  everything but the change itself until they have been changed (see
 //  requireLogin). What
@@ -155,7 +155,7 @@ static int findUser(const char *name) {
 //  from a thing that reboots when someone flips a switch.
 // ---------------------------------------------------------------------------
 #define MAX_SESS 4
-static const uint32_t IDLE_MS = 5UL * 60UL * 1000UL;   // author's requirement
+static const uint32_t IDLE_MS = 5UL * 60UL * 1000UL;   // idle-session requirement
 struct Sess { char tok[33]; uint32_t seen; uint8_t user; uint8_t used; };
 static Sess sess[MAX_SESS];
 
@@ -435,8 +435,8 @@ static void buildValues(String &o) {
 
 //  A NUMBER, ALL OF IT, or nothing. String::toFloat() is atof(): "107,3" read
 //  as 107 - in range, so a tuning mark was stored 0.3 MHz off and every
-//  frequency shown afterwards was wrong without a word. The
-//  author writes French, so one decimal comma is read as the point; anything
+//  frequency shown afterwards was wrong without a word. A
+//  decimal comma is read as the point, for locales that write one; anything
 //  else that is not wholly a finite number is refused. An ABSENT value is the
 //  caller's business (actions without one pass 0, as they always have).
 static bool argNumber(const String &raw, float &out) {
@@ -532,7 +532,7 @@ static void buildState(String &o) {
 //  ONE REQUEST INSTEAD OF THREE.
 //
 //  Every connection costs this machine a TCP control block for about a minute
-//  against a pool of roughly sixteen (Firmware Gospel §8), so the number of round
+//  against a pool of roughly sixteen (Firmware Gospel), so the number of round
 //  trips is not a detail, it is the budget. Opening the portal used to take
 //  FOUR: the document, then the schema, the values and the state. Now it takes
 //  two, and the three are composed here.
@@ -648,7 +648,7 @@ static void hPutFile() {
   int n = settingsFromText(server.arg("plain"));
   //  A PARTIAL APPLY IS NOT A SUCCESS. The count says how many keys landed and
   //  says nothing about what was rejected; the tuning marks can be refused
-  //  wholesale and the author would read "41 settings applied" in green.
+  //  wholesale and the user would read "41 settings applied" in green.
   //  THE REFUSAL TRAVELS IN ITS OWN FIELD ("warn"), not folded into the
   //  success line: inside "m" it was painted in the SUCCESS colour and wiped
   //  itself after 2.6 s, because the HTTP answer is still a 200.
@@ -764,7 +764,7 @@ static void hUserDel() {
   int s = requireLogin(); if (s < 0) return;
   if (!isAdminReq(s)) { server.send(403, "application/json", "{\"e\":\"admin\"}"); return; }
   int i = server.arg("i").toInt();
-  //  Slot 0 is the author and is not deletable, ever. Losing it means a cable.
+  //  Slot 0 is the administrator and is not deletable, ever. Losing it means a cable.
   if (i <= 0 || i >= MAX_USERS || !users[i].used) {
     server.send(400, "application/json", "{\"e\":\"no\"}"); return;
   }
@@ -1016,8 +1016,8 @@ static void hOtaA32Upload() {
 //  advance of needing them. WebServer accepts such a socket and then waits
 //  HTTP_MAX_DATA_WAIT - five seconds, a hard #define in the library - for a
 //  request that is never coming. Every real request behind it waits too. Three
-//  preconnected sockets is a fifteen-second login, which is exactly what the
-//  author measured while curl, which opens exactly one connection, saw none of
+//  preconnected sockets is a fifteen-second login - measured directly,
+//  while curl, which opens exactly one connection, saw none of
 //  it.
 //
 //  The constant cannot be overridden from outside the library, but the client

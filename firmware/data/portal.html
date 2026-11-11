@@ -56,8 +56,8 @@ const $=s=>document.querySelector(s);
 let SC=null,VAL={},TAB=0,ST={},poll=null;
 
 //  A WARNING STAYS UP LONGER THAN AN ACKNOWLEDGEMENT. 2600 ms is a duration
-//  chosen for the word "applied"; a refusal is a sentence, and the author is
-//  reading it on the only interface he has once the cabinet is shut.
+//  chosen for the word "applied"; a refusal is a sentence, and it is
+//  read on the only interface available once the cabinet is shut.
 function toast(t,bad){const m=$('#msg');m.textContent=t;m.style.borderColor=bad?'var(--bad)':'var(--amb)';
   m.style.display='block';clearTimeout(m._t);
   m._t=setTimeout(()=>m.style.display='none',bad?12000:2600);}
@@ -65,8 +65,8 @@ function toast(t,bad){const m=$('#msg');m.textContent=t;m.style.borderColor=bad?
 //  EVERY REQUEST GETS A DEADLINE.
 //  fetch() has no timeout of its own: a request the radio never answers hangs
 //  for ever, and the page sits on "connecting to the radio..." with no retry
-//  and no error. That is not a hypothetical - it is what the author was looking
-//  at. Twelve seconds is far longer than this machine ever legitimately takes.
+//  and no error. That is not a hypothetical - it has been seen
+//  happen. Twelve seconds is far longer than this machine ever legitimately takes.
 async function api(p,body,ms){
   const ac=new AbortController();
   const t=setTimeout(()=>ac.abort(),ms||12000);
@@ -502,7 +502,7 @@ function paint(){
     g('vup',n(ST.up));
     //  THE ZERO-DATA WATCH. zrel counts the DAC leaving its zero-data analogue
     //  mute. That release was a pop suspect and was excluded on 2026-09-10 -
-    //  zrel stayed frozen through minutes of pops (Firmware Gospel §10); the
+    //  zrel stayed frozen through minutes of pops (Firmware Gospel); the
     //  watch is kept as telemetry. "Xs ago" lets an ear and the counter be
     //  compared: hear a pop, look here, see whether it just moved.
     g('vzdd',(ST.zrel===undefined||!ST.astate)?'-':(
@@ -615,7 +615,7 @@ async function loopTick(){
 //  THE PAGE MUST NEVER RENDER NOTHING.
 //  The old version did `catch(e){return;}` on the first two fetches, so a
 //  request that timed out left a completely blank document with no message and
-//  no retry - which is exactly what the author saw: "it loads but doesn't show
+//  no retry - which looked exactly like "it loads but doesn't show
 //  anything". A dashboard that cannot reach its machine has to SAY so.
 function showStatus(msg, sub){
   $('#app').innerHTML=`<main><div class=card style="max-width:22rem;margin:15vh auto">

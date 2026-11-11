@@ -6,7 +6,7 @@
 
 namespace BtLed {
 
-static const int LED_CH = 0;          // author's spec: LEDC channel 0
+static const int LED_CH = 0;          // LEDC channel 0
 static uint8_t   st     = BT_OFF;
 static uint32_t  entered = 0;
 static uint8_t   scale[7] = { 255, 255, 255, 255, 255, 255, 255 };

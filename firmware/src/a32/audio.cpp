@@ -96,7 +96,7 @@ static volatile int32_t  outMask      = (int32_t)0xFFFFFFFF;
 //  so the DAC's zero-data mute is not the pop. The witness is kept as
 //  telemetry; what follows is the reasoning that built it.
 //
-//  WHAT THE AUTHOR MEASURED, and it is the whole reason this exists: the pop's
+//  WHAT WAS MEASURED, and it is the whole reason this exists: the pop's
 //  loudness follows the AMPLIFIER's volume and not the A32's. Every operator in
 //  this file sits upstream of ONE linear multiply (the envelope x volume x
 //  balance pass below), and a linear operator cannot produce a level-independent
@@ -116,7 +116,7 @@ static volatile int32_t  outMask      = (int32_t)0xFFFFFFFF;
 //  by the mute circuit and the Directpath output bias - fixed amplitude, no
 //  matter what the samples were doing. That matched the reported fault.
 //
-//  THE AUTHOR'S OTHER TWO OBSERVATIONS FITTED IT TOO, which is why it was
+//  TWO OTHER OBSERVATIONS FITTED IT TOO, which is why it was
 //  worth instrumenting rather than arguing about:
 //    - AUX never pops. AUX is the one source where this file writes exact zeros
 //      for ever (see the memset below), so the DAC mutes once and never
@@ -127,7 +127,7 @@ static volatile int32_t  outMask      = (int32_t)0xFFFFFFFF;
 //  WHAT THIS CODE IS. Not a fix - a WITNESS. It mirrors the detector in the
 //  part, counting exactly what the part counts, so that "I heard a pop" and
 //  "the DAC came out of analogue mute" can be put side by side on the portal
-//  instead of being two anecdotes. zddRel did not move while he heard them -
+//  instead of being two anecdotes. zddRel did not move while the pops were heard -
 //  see the result above.
 //
 //  ZERO IS THE DAC'S ZERO, NOT OURS. The witness counts a word as zero when its
@@ -190,8 +190,8 @@ static volatile bool     clipFlag = false;
 //
 //  The first version of this used Q16 and intended to ramp over ~8 blocks, but
 //  advanced the envelope once per sample instead - so it completed in 8 frames,
-//  about 0.18 ms. Effectively a hard cut, which is exactly the jumpscare the
-//  author reported when switching to an already-playing source.
+//  about 0.18 ms. Effectively a hard cut, which is exactly the jumpscare
+//  heard when switching to an already-playing source.
 //
 //  Q24 exists because Q16 cannot express a one-second fade: 65536/44100 rounds
 //  to 1, and a step of 1 gives 65536 samples, or 1.49 s, with no way to ask for
@@ -338,7 +338,7 @@ static void audioTask(void *) {
     }
 
     //  AUX: the analogue path bypasses us entirely and the amp sums its three
-    //  inputs (Hardware Bible §22, §30), so our only job is to be silent.
+    //  inputs (Hardware Bible), so our only job is to be silent.
     memset(outBuf, 0, sizeof(outBuf));
     got = BLOCK * 2 * sizeof(int32_t);
 
@@ -508,7 +508,7 @@ static void audioTask(void *) {
       //
       //  WHY IT CANNOT DO WHAT sd_out_delay DID. That register moved DIN in TIME
       //  against BCK and the DAC latched the wrong bits - full volume through the
-      //  author's amplifier, 2026-09-10. This moves nothing in time and touches no
+      //  amplifier, 2026-09-10. This moves nothing in time and touches no
       //  bit the DAC plays at any audible weight. An all-zero stream stays all-zero
       //  (a zero successor gives a zero tail), so AUX and mute are untouched and
       //  the zero-data witness, which looks only at bits 31..8, reads the same.
@@ -625,7 +625,7 @@ void begin() {
   cfg.dma_buf_count        = 8;
   cfg.dma_buf_len          = 256;
   //  APLL ON, and do NOT "try" turning it off. The MCLK on GPIO0 feeds BOTH
-  //  converters' SCK (Hardware Bible §3; the DAC's since 2026-09-02), and the
+  //  converters' SCK (Hardware Bible; the DAC's since 2026-09-02), and the
   //  PCM5102A's internal PLL is disabled once an external SCK is supplied
   //  (SLAS859C 9.3.5.3). The APLL is what makes 11.2896 MHz exactly, and BCK and
   //  LRCK are divided from that same clock, so SCK:LRCK is 256 by construction.
@@ -641,7 +641,7 @@ void begin() {
   //  NOTHING DRIVES XSMT, AND NOTHING CAN. Until 2026-09-23 this block set
   //  GPIO16 HIGH, believing it was the PCM5102A's soft-mute input and that a
   //  floating XSMT caused the pops. No A32 pin reaches XSMT: the DAC module
-  //  pulls it up itself and GPIO16 is unused (Hardware Bible §6). That write
+  //  pulls it up itself and GPIO16 is unused (Hardware Bible). That write
   //  never reached the DAC, so it was removed. Mute is
   //  software only - see audio.h.
 
@@ -652,7 +652,7 @@ void begin() {
   i2s_pin_config_t pins = {};
   //  MCLK is FORCED to GPIO0 by the silicon: the classic ESP32 can only emit
   //  the I2S master clock on GPIO0, 1 or 3, and 1/3 are the console. BOTH
-  //  converters take it (Hardware Bible §3). Never detach GPIO0 from the I2S
+  //  converters take it (Hardware Bible). Never detach GPIO0 from the I2S
   //  peripheral: that is a clock error at the DAC, not merely a silent ADC.
   //  See setAdcClock()'s tombstone below.
   pins.mck_io_num   = A32_PCM1802_MCLK;
@@ -670,11 +670,11 @@ void begin() {
   //  counting: 52 isolated pops at drive 2 (3.33/min) against 0 at drive 3,
   //  stratified exact p = 2.8e-16, all 15 pairs one-sided - about 150x fewer.
   //  A margin fix, not a root cause, which is still open. The reading behind
-  //  it, never seen on a scope: GPIO0 feeds two converters (Hardware Bible
-  //  §3) and the DAC's BCK-recovery PLL is off while SCK is present (SLAS859C
+  //  it, never seen on a scope: GPIO0 feeds two converters (Hardware Bible)
+  //  and the DAC's BCK-recovery PLL is off while SCK is present (SLAS859C
   //  9.3.5.3), so the edge into those loads decides whether the DAC latches
-  //  the right bit. The author: "Drive 3 works with no seeming
-  //  consequences." setClockDrive() clamps to 2..3 and reads back from all
+  //  the right bit. Drive 3 works with no seeming
+  //  consequences. setClockDrive() clamps to 2..3 and reads back from all
   //  three pads; the remote sys.clkdrv knob still works, so this can be A/B-ed
   //  again - or put back - at any time without a reflash.
   setClockDrive(3);
@@ -706,7 +706,7 @@ int32_t outMaskIs() { return outMask; }
 //  THE TWO KNOBS - AND sd_out_delay IS NOT FREE. Measured 2026-09-10 with
 //  Device 3 counting pops: of its four positions only 0 plays correctly. 1 and 3
 //  silenced the audio outright, and 2 sent the radio to FULL VOLUME through the
-//  author's amplifier. It moves DIN in time against BCK and the DAC latches the
+//  amplifier. It moves DIN in time against BCK and the DAC latches the
 //  wrong bits. Its remote path was removed on 2026-09-11; the function remains
 //  only for the A32's own USB console. NEVER write it with the audio path live.
 //  Both knobs were built for a mechanism since EXCLUDED: that a DIN transition
@@ -743,7 +743,7 @@ uint8_t dinDriveIs() {
 //  WHY. The sign-extended tail (the DATA side) was tested blind with the heat
 //  gun and did not move the pop rate. The reading that survived is that the DAC
 //  loses its framing through its CLOCKS - GPIO0 feeds MCLK to two loads, the
-//  PCM1802 and the DAC's SCK (Hardware Bible §3), and the DAC's BCK-recovery
+//  PCM1802 and the DAC's SCK (Hardware Bible), and the DAC's BCK-recovery
 //  PLL, the fallback, is disabled once SCK is supplied (SLAS859C 9.3.5.3).
 //  Stiffer victims - faster, lower-impedance edges - are the cheapest direct
 //  test of that.
@@ -768,9 +768,9 @@ void setClockDrive(uint8_t cap) { setClockDriveSplit(cap, cap); }
 //  heard to distort the ADC path; drive 2 everywhere did the reverse. Both
 //  converters see all three pads - the PCM1802 is a SLAVE and takes BCK and
 //  LRCK too - so which pad the ADC objects to is unknown, and guessing it costs
-//  a soldering iron. This makes it a ten-minute listening test instead. The
-//  author has since ruled drive 3 fine as it is: "Drive 3 works
-//  with no seeming consequences."
+//  a soldering iron. This makes it a ten-minute listening test instead. Drive
+//  3 is confirmed fine as it is: it works
+//  with no seeming consequences.
 void setClockDriveSplit(uint8_t mclkCap, uint8_t frameCap) {
   if (mclkCap  < 2) mclkCap  = 2;
   if (mclkCap  > 3) mclkCap  = 3;
@@ -817,7 +817,7 @@ uint8_t sdOutDelayIs() { return (uint8_t)I2S0.timing.tx_sd_out_delay; }
 //  clock. That was a useful diagnostic while GPIO0 fed the ADC alone. It was
 //  removed on 2026-09-01, ahead of the DAC's SCK moving to the same pin on
 //  2026-09-02: the PCM5102A takes its system clock from GPIO0 too (Hardware
-//  Bible §3), so cutting it is no longer "silence the radio", it is "clock
+//  Hardware Bible), so cutting it is no longer "silence the radio", it is "clock
 //  error at the DAC".
 //
 //  If the ADC ever needs silencing again, do it by muting its samples, not

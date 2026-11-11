@@ -32,8 +32,8 @@ static uint32_t quietUntil  = 0;    // 0 = transmitting normally
 
 //  TRANSMIT POWER, quarter-dBm (80 = 20.0 dBm, the part's maximum). THIS
 //  FIRMWARE CAPS IT AT 60 (15 dBm): measured 2026-09-24, nothing could see this
-//  board at 20 dBm and everything could at 15 - see TX_LADDER. The author keeps
-//  that ceiling as a firmware choice. Default and floor: 8 (2.0 dBm).
+//  board at 20 dBm and everything could at 15 - see TX_LADDER. That ceiling is
+//  kept as a firmware choice. Default and floor: 8 (2.0 dBm).
 //
 //  WHY THE FLOOR IS SO LOW. Measured 2026-09-07: the receiver was fine - a
 //  -88 dBm network in a scan, probe requests logged at -49 dBm - while three
@@ -42,8 +42,8 @@ static uint32_t quietUntil  = 0;    // 0 = transmitting normally
 //  changed). At 2.0 dBm: 88 % at one metre, and it associated with the house
 //  gateway. Good below a threshold and silent above it pointed at the supply
 //  sagging under the transmit burst, not a damaged amplifier; the supply as
-//  built is Bible §4. No brownout reached the log: IDF's own messages go to
-//  UART0 (GPIO43/44) and this console is the native USB port (Bible §4).
+//  built is Hardware Bible. No brownout reached the log: IDF's own messages go to
+//  UART0 (GPIO43/44) and this console is the native USB port (Hardware Bible).
 //
 //  Re-applied after EVERY mode change: esp_wifi_set_mode() restarts the
 //  interfaces and does not carry this with it.
@@ -63,7 +63,7 @@ static uint8_t  gTxQ = 8;
 //  no prize for shouting. A distant router simply makes it climb on its first
 //  failure and settle higher.
 //  THE TOP RUNG IS 15 dBm, NOT 20. Measured 2026-09-24: the forced access point
-//  at 20.0 dBm was seen by NOTHING - not the author's phone, not a PC adapter -
+//  at 20.0 dBm was seen by NOTHING - not a phone, not a PC adapter -
 //  for 90 s; one step down, at 15.0 dBm, both saw it within 22 s, at 76 %, and a
 //  PC joined it and logged into the portal. The house link at 20 dBm had passed
 //  a short ping test, but a link surviving is weak evidence and an AP nobody can
@@ -88,12 +88,12 @@ static void applyTxPower() {
   esp_wifi_set_max_tx_power((int8_t)gTxQ);
 }
 
-//  The rescue network. OPEN, by the author's decision: "The rescue
-//  ap shouldn't have the user search for a passphrase when he's only trying to
-//  make his device work again." The portal's own login still guards every
+//  The rescue network. OPEN, deliberately: a user locked out should not have
+//  to search for a passphrase when they are only trying to make the device
+//  work again. The portal's own login still guards every
 //  action. The cost: nothing on this network is encrypted, so the portal login
 //  and the home WiFi password typed during a rescue cross the air in clear -
-//  for as long as the AP is up, within radio range. Firmware Gospel §8.
+//  for as long as the AP is up, within radio range. Firmware Gospel.
 static const char *AP_SSID = "Ambersong";
 
 //  THE CAPTIVE PORTAL. While the AP is up, every name a phone looks up answers
@@ -571,7 +571,7 @@ void loop() {
       //  beacon, and every packet of a request waits for the next one: measured
       //  0.5-1.0 s just to complete a TCP handshake on the same LAN, and 4-19 s
       //  for a page. Staying awake draws more current (ESP32-S3 datasheet: tens
-      //  of mA); the machine is mains powered (Bible §10).
+      //  of mA); the machine is mains powered (Hardware Bible).
       WiFi.setSleep(WIFI_PS_NONE);
       //  SAY WHICH RUNG WORKED. main.cpp copies gTxQ into the settings within a
       //  loop pass, so the rung that associated is what the next boot starts on.

@@ -28,7 +28,7 @@ def check_js(html_text):
 
     THE REASON THIS EXISTS. A duplicate `const t` was shipped to the machine and
     made the WHOLE script fail to parse, so the portal rendered a dead page - and
-    it was found by the author, on the hardware, not by anyone reading the code.
+    it was found on the hardware, not by reading the code.
     A syntax error is the one class of bug a machine can catch for free, and it
     had been costing a flash cycle and a person's patience each time.
 

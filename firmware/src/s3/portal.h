@@ -49,8 +49,8 @@ uint32_t served();
 uint32_t stackFreeBytes();
 
 //  For the console ('~'): when the password has been lost, erase EVERY
-//  account and put the author back on the placeholder admin/admin, which the
-//  portal then makes him change. There is no lockout recovery on the front of
+//  account and restore the placeholder admin/admin account, which the
+//  portal then makes the user change. There is no lockout recovery on the front of
 //  the machine, by decision - the USB socket is the recovery path, and this
 //  is it.
 void resetAdmin();

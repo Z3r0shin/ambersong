@@ -1,4 +1,4 @@
-![Ambersong powering up](photos/Ambersong%20-%20Power%20Up%20Animation.gif)
+![Ambersong powering up](docs/figures/Ambersong%20-%20Power%20Up%20Animation.gif)
 
 
 # Ambersong
@@ -56,14 +56,12 @@ by AIs. Anyway, the Human Edition is also pretty, not the LLM one.
 
 - **Hardware Bible**: what is wired to what, fitted values, the tube radio circuit, the FM antenna, the
   amplifier, the cabinet and the printed parts.
-  [PDF](docs/Ambersong%20-%20Hardware%20Bible%20-%20Human%20Readable.pdf) ·
-  [chapters](docs/human/hardware-bible/) ·
-  [LLM edition](docs/llm-edition/HARDWARE-BIBLE.md)
+  [PDF](docs/Ambersong%20-%20Hardware%20Bible.pdf) ·
+  [LLM edition](docs/hardware-bible.md)
 - **Firmware Gospel**: what the firmware does and why, every setting, what was tried and dropped, and
   how to build, flash, update and recover it.
-  [PDF](docs/Ambersong%20-%20Firmware%20Gospel%20-%20Human%20Readable.pdf) ·
-  [chapters](docs/human/firmware-gospel/) ·
-  [LLM edition](docs/llm-edition/FIRMWARE-GOSPEL.md)
+  [PDF](docs/Ambersong%20-%20Firmware%20Gospel.pdf) ·
+  [LLM edition](docs/firmware-gospel.md)
 
 ## Building your own
 
@@ -83,17 +81,17 @@ to make sure that at least some stuff will translate correctly to you.
 Many tube radios from this era have no isolation transformer. If you find/use an old tube radio,
 check if the chassis is tied to mains. Mine was, and since in those years the wall plug was reversible,
 either live/hot or neutral could go to the whole chassis. Unplug it before you open it/play with such
-a tube radio. Hardware Bible §31.1 covers what that means in this build.
+a tube radio. The Hardware Bible's safety chapter ([PDF](docs/Ambersong%20-%20Hardware%20Bible.pdf), chapter 2; [Markdown](docs/hardware-bible.md), "mains safety") covers what that means in this build.
 
 ## What's in here
 
 ```
 docs/                    the Hardware Bible and the Firmware Gospel: Human Readable PDFs,
-                         their chapters (docs/human/) and the LLM editions (docs/llm-edition/)
+                         the LLM editions (docs/*.md) and their figures (docs/figures/)
 firmware/                the PlatformIO project for both boards
 hardware/schematics/     the KiCad project, a collated PDF file and the radio's factory schematic
 hardware/STLs/           the 76 printed parts and a Sketchup project with all those parts
-photos/                  the finished radio, wow, such radio, mucho bueno
+docs/figures/            the finished radio, wow, such radio, mucho bueno
 ```
 
 The KiCad sheets show what was built, drawn to be read. They aren't a PCB layout, so ERC and such do
@@ -143,11 +141,11 @@ make this yours. I'll just help with what I can, if I can.
 
 ## License
 
-- Firmware: GPL-3.0-or-later
-- Hardware design files (KiCad, STL): CERN-OHL-S-2.0
-- Documentation: CC BY-SA 4.0
-- Photos and renders: CC BY-NC-ND 4.0
+- Firmware: [GPL-3.0-or-later](LICENSE-GPL-3.0-or-later)
+- Hardware design files (KiCad, STL): [CERN-OHL-S-2.0](LICENSE-CERN-OHL-S-2.0)
+- Documentation: [CC BY-SA 4.0](LICENSE-CC-BY-SA-4.0)
+- Photos and renders: [CC BY-NC-ND 4.0](LICENSE-CC-BY-NC-ND-4.0)
 - The running hare : all rights reserved. It's family imagery, not for reuse.
 
 Apart from the photos and the hare, you can use any of it, change it and share it, commercially
-too, as long as what you share stays under the same license. Details and exceptions are in [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+too, as long as what you share stays under the same license. Details and exceptions are in [`NOTICE`](NOTICE).

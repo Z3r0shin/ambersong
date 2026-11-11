@@ -2,14 +2,14 @@
 //  AMBERSONG  -  AUDIO MCU (ESP32-WROOM-32)
 //
 //  THE AUDIO ENGINE: A2DP sink, radio capture through the ADC, output through
-//  the DAC (the converters: Bible §6), the source switching between them, the
+//  the DAC (the converters: Hardware Bible), the source switching between them, the
 //  DS3231, and the S3 end of the link, in one firmware.
 //
 //  What makes it tractable is in audio.h: A2DP is told NOT to touch I2S. We install
 //  the driver once, full duplex, and never reconfigure it. Source switching is
 //  then a decision about where the next block of samples comes from.
 //
-//  BLUETOOTH CONNECTION POLICY - the author's rules, and why the mapping is
+//  BLUETOOTH CONNECTION POLICY - the rules, and why the mapping is
 //  what it is.
 //    "a phone that wanders into range must not latch on its own"
 //    "a phone that has connected before may reconnect on demand FROM THE PHONE"
@@ -24,7 +24,7 @@
 //    a phone connected   -> NOT connectable, so no second phone pages in behind it.
 //  And all of it is additionally gated on being AWAKE - the amp on AND the S3
 //  talking (see AWAKE / ASLEEP) - and on the proto self-test having passed. The
-//  A32 runs whenever the set is plugged in (Bible §10), so without that gate a
+//  A32 runs whenever the set is plugged in (Hardware Bible), so without that gate a
 //  phone could connect at 3 a.m. and silently route its audio into a radio that
 //  is off. Every rule is applied in one place: applyScanMode().
 //
@@ -125,7 +125,7 @@ static void onSampleRate(uint16_t rate) {
 //  RADIO, in AUX and asleep, with our cache still saying invisible, and it
 //  stayed that way until something happened to move the policy. At boot the
 //  queued STACK_UP did the same thing to a radio that had just set itself
-//  invisible. That breaks the author's two rules outright: invisible on
+//  invisible. That breaks the two rules outright: invisible on
 //  Bluetooth unless in BT mode and awake, and nothing connects at night.
 //
 //  set_scan_mode_connectable() is virtual and every one of those calls goes
@@ -151,7 +151,7 @@ static Preferences       prefs;
 //  A pot rarely reaches its own rails, so the knob's ends (and its centre) are
 //  taken with the knob in place - calibratePot(), console p/c/P or the portal -
 //  and kept in NVS. The numbers here are only the compiled fallback.
-//  Stored on the A32 because the A32 reads the pot (Bible §7) - the reading and
+//  Stored on the A32 because the A32 reads the pot (Hardware Bible) - the reading and
 //  the thing being calibrated must not live on opposite sides of a link.
 static uint16_t potRawMin = 60;
 static uint16_t potRawMid = 0;         // 0 = not measured, two-point mapping
@@ -194,7 +194,7 @@ static uint32_t      strayDropAt = 0;
 static bool     ampOn        = false;
 
 // ---------------------------------------------------------------------------
-//  AWAKE / ASLEEP  -  author's rule, 2026-09-01.
+//  AWAKE / ASLEEP.
 //
 //  "If the AMP is detected as powered down, there is no reason to make the A32
 //  do anything. It should just listen for the S3."
@@ -203,13 +203,13 @@ static bool     ampOn        = false;
 //  the DS3231 and the OTA path stay up, because those are exactly the things
 //  the S3 needs from us and the only reason to be awake at all.
 //
-//  LINK SILENCE COUNTS AS AMP-OFF, and that is a DELIBERATE choice he made
+//  LINK SILENCE COUNTS AS AMP-OFF, a DELIBERATE choice made
 //  against the alternative. Asked whether an unreachable S3 should mean
-//  "assume the amp is on so a dead helper board never silences the radio", he
-//  chose the opposite: "if the S3 is unreachable then I want to know about it -
-//  the radio doesn't work at all, no audio, no clock, no lights, nothing."
+//  "assume the amp is on so a dead helper board never silences the radio",
+//  the opposite was chosen: if the S3 is unreachable, that should be obvious -
+//  the radio doesn't work at all, no audio, no clock, no lights, nothing.
 //
-//  Consequences he accepted knowingly, written down so nobody 'fixes' them:
+//  Consequences accepted knowingly, written down so nobody 'fixes' them:
 //    - an S3 reboot, or a long S3 OTA, silences the radio mid-listen
 //    - there is a brief dead moment at every power-up, until the S3 first
 //      reports, because ampOn starts false and peerAlive() starts false
@@ -223,7 +223,7 @@ static bool     awake        = false;
 //  un-asserted it: settingsApply(), updateSource(), setup() and otaGiveUp()
 //  all wrote cfgA.muted straight through with no regard for `awake`. The
 //  audible consequence was the feature defeating itself - asleep BECAUSE the
-//  S3 went quiet is the author's chosen alarm, and turning the source knob ran
+//  S3 went quiet is the chosen alarm, and turning the source knob ran
 //  updateSource(), which unmuted, and the alarm vanished while the S3 was
 //  still dead. No portal needed, just the front knob.
 //
@@ -261,7 +261,7 @@ static uint8_t  btTxLevel = (uint8_t)ESP_PWR_LVL_N0;
 //  drives follow - and ONCE, WHEN SET, never from the 4 Hz state builder: the
 //  value only changes when it is set. 0xFF = never read, or the controller
 //  would not say. (Polling it from loop() was blamed for an A32 reboot on
-//  2026-09-11; withdrawn 2026-09-15 - the author had power-cycled the set.)
+//  2026-09-11; withdrawn 2026-09-15 - the set had been power-cycled.)
 static uint8_t  btTxMaxSeen = 0xFF, btTxMinSeen = 0xFF;
 
 static void applyBtTxPower() {
@@ -350,8 +350,8 @@ static void applyScanMode(bool force = false) {
 }
 
 // ---------------------------------------------------------------------------
-//  GRACEFUL DISCONNECT  -  author's decision, 2026-08-28: "disconnect entirely,
-//  but pause before".
+//  GRACEFUL DISCONNECT: disconnect entirely,
+//  but pause before.
 //
 //  The pause matters. Tearing down A2DP under a phone that still thinks it is
 //  playing leaves its media app in a playing state with nowhere to go; an AVRCP
@@ -428,7 +428,7 @@ static void settingsDefaults() {
   cfgA.muted        = 1;       // cleared by settingsLoad(): mute is never restored
   cfgA.balance      = 0;
   //  MEASURED 2026-09-23 through this firmware, with the tube radio as it was
-  //  set up that day (its own volume and the rest: Bible §19, §22). At 0 dB the
+  //  set up that day (its own volume and the rest: Hardware Bible). At 0 dB the
   //  radio read RMS -29.9 dBFS with peaks to -14.0 before the volume; the old
   //  +15 clipped at the gain stage, i.e. at EVERY volume. +8 puts peaks at about -6 dBFS, RMS -22.
   //  Bluetooth: a -14 dBFS RMS pink-noise reference (streaming-level loudness)
@@ -438,7 +438,7 @@ static void settingsDefaults() {
   cfgA.gainBt       = -70;     // -7.0 dB
   cfgA.monoSum      = 1;
   cfgA.muteOnChange = 1;
-  cfgA.fadeInMs     = 1000;    // author's request: a gentle arrival, not a jumpscare
+  cfgA.fadeInMs     = 1000;    // a gentle arrival, not a jumpscare
   cfgA.fadeOutMs    = 150;     // leaving should be quick - you turned the knob
   cfgA.taperX10     = 25;      // gamma 2.5: half travel is -15 dB. Tune by ear.
 
@@ -532,10 +532,10 @@ static void settingsFlush(bool force = false) {
 // ---------------------------------------------------------------------------
 static uint8_t readSource(uint16_t &raw) {
   //  Median of 5. GPIO36 (A32_MODE_ADC) is input-only with no internal pulls.
-  //  The switch's three positions and the levels they give are in the Bible
-  //  (§11, §22); the centre reads 0 V = AUX. The thresholds and the ordering
-  //  AUX < BT < RADIO come from this firmware by the author's DPDT ruling
-  //  (Bible §0) and live in pins.h - never infer them from anything else.
+  //  The switch's three positions and the levels they give are in the Hardware Bible;
+  //  the centre reads 0 V = AUX. The thresholds and the ordering
+  //  AUX < BT < RADIO come from this firmware's DPDT assignment
+  //  (Hardware Bible) and live in pins.h - never infer them from anything else.
   //  SETTLE THE CHANNEL FIRST.
   //  GPIO36 is SENSOR_VP, which shares an internal amplifier path, and it reads
   //  high for a while after a DIFFERENT ADC1 channel has been sampled. This
@@ -649,7 +649,7 @@ static void updateVolumePot() {
     //  clears 24 counts trivially and is applied in full, for one 50 ms poll,
     //  before the next reading pulls it back. If that is the pop, this is the
     //  number that shows it, and volJumpMs is what places it against the
-    //  moment the author heard something.
+    //  moment something was heard.
     uint8_t dv = (vol > cfgA.volume) ? (vol - cfgA.volume) : (cfgA.volume - vol);
     volSteps++;
     if (dv > volJumpMax) { volJumpMax = dv; volJumpMs = millis(); }
@@ -684,7 +684,7 @@ static void calibratePot(uint8_t which) {
 // ---------------------------------------------------------------------------
 //  OTA RECEIVER
 //
-//  The S3 has no reset or boot line to this MCU (Bible §3, §5), so the UART is
+//  The S3 has no reset or boot line to this MCU (Hardware Bible), so the UART is
 //  the only way to update it without opening the cabinet. The S3
 //  relays an HTTP upload into 1 kB frames and waits for an acknowledgement on
 //  each one; every ack carries the byte count committed so far, which makes a
@@ -1037,7 +1037,7 @@ static void updateBtState() {
     btDropping = false;
     //  ON THE WIRE TOO, 2026-09-24: with the cabinet shut the console is not
     //  there, and a phone that stayed on after the portal hung up is exactly
-    //  what the author would ask about. Same channel and form as kBroken in
+    //  what would need investigating. Same channel and form as kBroken in
     //  loop(): MSG_LOG, a constant string, no buffer.
     static const char kNoLand[] = "BT: the disconnect did not land - still connected";
     Serial.printf("  [WARN] %s.\n", kNoLand);
@@ -1108,8 +1108,8 @@ static void serviceWake() {
     //  AND FORGET THE AMP when the S3 is the reason. Its last word may be stale
     //  by the time it speaks again - the amp switched off while the S3 was
     //  rebooting - and waking on the old "amp on" unmuted into an amp that was
-    //  off, connectable, until the next SET_SYS (author: clear
-    //  it so it re-checks). Now it stays asleep until the S3 says so again.
+    //  off, connectable, until the next SET_SYS (cleared
+    //  so it re-checks). Now it stays asleep until the S3 says so again.
     if (!gLink.peerAlive()) ampOn = false;
     //  Pause the phone before dropping it, the same courtesy the selector
     //  already gets: an app left thinking it is playing into nowhere was a
@@ -1154,10 +1154,10 @@ static void updateSource() {
 
   Audio::setSource(s);
   //  AUX never passes through the A32 and the amp's input panel sums its inputs
-  //  (Bible §22, §30), so on AUX the DAC must carry silence. That silence is
+  //  (Hardware Bible), so on AUX the DAC must carry silence. That silence is
   //  STRUCTURAL - the audio task writes zeros for AUX - so mute here means only
   //  what the user asked for, on top of whether we are awake. Mute is software
-  //  only: no A32 pin reaches the DAC's XSMT (Bible §6).
+  //  only: no A32 pin reaches the DAC's XSMT (Hardware Bible).
   applyMute();
   updateBtState();
   applyScanMode();
@@ -1169,7 +1169,7 @@ static void updateSource() {
 //  ROLLBACK. The bootloader and the core are built with app rollback, but the
 //  core's initArduino() marked every new image valid BEFORE setup() - so a
 //  relayed image that crashed or hung at boot looped on itself, and only USB
-//  could fix it (the S3 has no reset line to this MCU, Bible §3). Returning
+//  could fix it (the S3 has no reset line to this MCU, Hardware Bible). Returning
 //  true here tells the core "this firmware confirms itself": a freshly OTA'd
 //  image now boots ON TRIAL, and the bootloader goes back to the previous image
 //  on the next reset unless confirmImage() ran. confirmTick() runs it a minute
@@ -1290,7 +1290,7 @@ void setup() {
   Serial.printf ("  firmware %s (%s)\n", FW_VERSION, FW_COMMIT);
     Serial.println(F("======================================================"));
 
-  pinMode(A32_BT_BUTTON, INPUT_PULLUP);      // ACTIVE LOW (Bible §11)
+  pinMode(A32_BT_BUTTON, INPUT_PULLUP);      // ACTIVE LOW (Hardware Bible)
   analogReadResolution(12);
   analogSetPinAttenuation(A32_MODE_ADC,    ADC_11db);
   analogSetPinAttenuation(A32_VOLUME_POT,  ADC_11db);   // 11 dB: the ADC's widest input range
@@ -1311,7 +1311,7 @@ void setup() {
   //  A FAILED SELF-TEST NO LONGER HALTS - 2026-09-24.
   //
   //  This line used to be `for(;;) delay(1000);`, BEFORE gLink.begin(). The A32
-  //  is updated only through the link (no reset line from the S3, Bible §3)
+  //  is updated only through the link (no reset line from the S3, Hardware Bible)
   //  and, until 2026-09-25, there was no rollback, so an OTA'd image that failed
   //  here was a brick until the cabinet came open. A halt protects nothing that
   //  a mute does not: the self-test is about the FRAMER, and a framer that is
@@ -1435,14 +1435,14 @@ void loop() {
   //  updateBtState(), so the write sees this pass's btState.
   if (scanDirty) { scanDirty = false; applyScanMode(true); }
 
-  //  Pair button, active LOW (Bible §11). The debounce is here: a press counts
+  //  Pair button, active LOW (Hardware Bible). The debounce is here: a press counts
   //  on RELEASE, and only after being held more than 30 ms. BT mode only.
   static bool wasDown = false;
   static uint32_t downAt = 0;
   bool down = (digitalRead(A32_BT_BUTTON) == LOW);
   if (down && !wasDown) downAt = now;
   if (!down && wasDown && now - downAt > 30 && source == SRC_BT) {
-    //  Author's decision: the button is for devices that have NOT connected
+    //  By design: the button is for devices that have NOT connected
     //  before, so it drops whoever is on first. Otherwise a second phone can
     //  pair behind the first and it stops being obvious which one is in charge.
     Serial.println(F("  pair button -> LINK (discoverable for new devices)"));
@@ -1646,7 +1646,7 @@ void loop() {
         break;
       }
       //  'y' (tx_sd_out_delay) was removed 2026-09-25: position 2 had sent the
-      //  radio to FULL VOLUME, and the author ruled the key out. Only the
+      //  radio to FULL VOLUME, so the key was removed. Only the
       //  readback remains, in the state frame and the status line.
       case 'p': calibratePot(0); break;   // knob fully anticlockwise first
       case 'P': calibratePot(1); break;   // knob fully clockwise first

@@ -6,7 +6,7 @@
 //
 //  THE LINK
 //    The firmware uses S3 GPIO13 (TX) / GPIO14 (RX) and A32 GPIO26 (RX) /
-//    GPIO27 (TX) - pins.h. What joins them is the Hardware Bible's (§2, §3).
+//    GPIO27 (TX) - pins.h. What joins them is the Hardware Bible's.
 //  Serial2 on BOTH sides, and on the A32 it MUST be given explicit pins - its
 //  defaults are GPIO16/17, and GPIO17 is the firmware's LRCK. Calling
 //  Serial2.begin() bare silently breaks the DAC and surfaces much later as
@@ -46,8 +46,8 @@
 //  LIVENESS
 //    The A32 sends STATE unprompted every 250 ms. The S3 treats >2 s of silence
 //    as "A32 missing" and keeps working - the display and needle do not
-//    depend on the audio MCU. The A32 is the other way round, by the author's
-//    awake rule (2026-09-01): it plays and takes Bluetooth only while the amp
+//    depend on the audio MCU. The A32 is the other way round: the awake rule
+//    says it plays and takes Bluetooth only while the amp
 //    is on AND the S3 is talking (serviceWake() in a32/main.cpp). When the S3
 //    goes quiet - its own OTA reboot included - the A32 mutes, drops the phone
 //    and forgets the amp, and wakes again only when the S3 is back and says
@@ -77,7 +77,7 @@
 #define PROTO_STATE_MS      250      // A32 -> S3 unprompted state cadence
 #define PROTO_SILENCE_MS    2000     // beyond this, the peer is "missing"
 
-//  Version string format, author's convention: v.X.YYYYMMDDTHHMMSS
+//  Version string format, convention: v.X.YYYYMMDDTHHMMSS
 #define PROTO_VERSION_LEN   24
 
 // ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ enum : uint8_t {
   MSG_GET_CFG       = 0x1A,   // S3  -> A32   empty       (send me your settings)
   MSG_TEST_DC       = 0x1B,   // S3  -> A32   uint8 0/1   constant-DC diagnostic
   MSG_ADC_CLOCK     = 0x1C,   // RETIRED 2026-09-01. GPIO0's clock feeds the
-                              //   DAC as well (Hardware Bible §3), so cutting
+                              //   DAC as well (Hardware Bible), so cutting
                               //   MCLK is a DAC clock error, not a mute. The
                               //   id stays reserved so it is never reused.
   MSG_ZERO_FLOOR    = 0x1D,   // S3  -> A32   uint8 0/1   zero-data floor
@@ -121,7 +121,7 @@ enum : uint8_t {
   MSG_DIN_DRIVE     = 0x40,   // S3  -> A32   uint8 0..3  DIN pad drive
   //  MSG_SD_DELAY RETIRED 2026-09-11, the day after it was added. It was a
   //  remote, unguarded write to tx_sd_out_delay, and that register sent the radio
-  //  to FULL VOLUME: of its four positions only 0 plays correctly. It was ruled
+  //  to FULL VOLUME: of its four positions only 0 plays correctly. It is
   //  unsafe to ship a build that still carried it.
   //  The id stays reserved and is never reused, like MSG_ADC_CLOCK above.
   MSG_SD_DELAY      = 0x41,   // RETIRED. Nothing sends it; the A32 ignores it.
@@ -179,21 +179,21 @@ enum : uint8_t {
 //  Source selector. The A32 owns the ADC that reads the ladder and is therefore
 //  the authority - the S3 learns the source from STATE, never assumes it.
 //  The thresholds live in pins.h; which switch position puts which level on
-//  the ladder is the Hardware Bible's (§11).
+//  the ladder is the Hardware Bible's.
 enum : uint8_t {
   SRC_AUX   = 0,
   SRC_BT    = 1,
   SRC_RADIO = 2,
 };
 
-//  Bluetooth state machine, author's specification of 2026-08-28, reproduced
+//  Bluetooth state machine, specified and reproduced
 //  exactly. LED is ACTIVE LOW: for brightness B, write 255 - B.
 //
 //  NOTE ON NAMING - LINK IS NOT "LINKED".
 //  In this specification LINK means EXPLICIT PAIRING MODE, entered by pressing
 //  the pair button. It is not the streaming state. An earlier version of this
 //  header guessed "connected and streaming" and was wrong. The visual language
-//  the author described is the authority:
+//  described below is the authority:
 //    fast breathing = actively looking      slow breathing = idle
 //    double flash   = found                 steady         = connected
 //    regular blink  = explicit pairing
@@ -222,12 +222,12 @@ struct __attribute__((packed)) ProtoHello {
 struct __attribute__((packed)) ProtoAudio {
   uint8_t  volume;         // 0..255 master
   uint8_t  muted;          // 0/1 - SOFTWARE mute, by writing zeros. No A32 pin
-                           // reaches the DAC's XSMT (Hardware Bible §6), so
+                           // reaches the DAC's XSMT (Hardware Bible), so
                            // there is no hardware mute to use.
   int16_t  balance;        // -100..+100, negative = toward LEFT.
                            // Scales the A32's own output only, so it does
                            // nothing for AUX, which never passes through the
-                           // A32 (Hardware Bible §22).
+                           // A32 (Hardware Bible).
   int16_t  gainRadio;      // tenths of a dB, default +80 (measured 2026-09-23)
   int16_t  gainBt;         // tenths of a dB, default -70 (matched to the radio)
   uint8_t  monoSum;        // 0/1 - sum the radio's two ADC slots. Correlated
@@ -241,7 +241,7 @@ struct __attribute__((packed)) ProtoAudio {
                            // you turned the knob, you want it gone. Arriving
                            // should be gentle, because the new source may
                            // already be playing at full tilt and a hard cut in
-                           // is a jumpscare. Author asked for about 1 s in.
+                           // is a jumpscare. About 1 s in is the request.
   uint8_t  taperX10;       // VOLUME LAW, gamma x 10. gain = (v/255) ^ gamma.
                            // 10 = linear amplitude, 20 = square (-12 dB at half
                            // travel), 25 = -15 dB, 30 = -18 dB, 33 is about what
@@ -269,14 +269,14 @@ struct __attribute__((packed)) ProtoBtCfg {
                            // A32 hard-codes set_auto_reconnect(false). The radio
                            // never chases the phone; the phone comes to it.
   uint16_t lookTimeoutS;   // LINK (the pairing window) -> STDBY after this many
-                           // seconds, author: 60-120. LOOK -> STDBY is a fixed
+                           // seconds, typically 60-120. LOOK -> STDBY is a fixed
                            // 20 s in a32/main.cpp.
   uint8_t  ledBrightness[7];  // indexed by BT_* state: a 0..255 scale on the
                               // specified brightness, 255 = as specified (btled.h)
   uint8_t  pauseOnLeave;   // 0/1 - send AVRCP pause BEFORE the disconnect that
                            // always follows the source leaving BT. Leaving BT
-                           // mode drops the phone entirely (author's decision,
-                           // 2026-08-28); this flag only controls whether it is
+                           // mode drops the phone entirely (a deliberate choice);
+                           // this flag only controls whether it is
                            // stopped politely first, so its media app does not
                            // stay stuck in a playing state with nowhere to go.
 };
@@ -322,8 +322,8 @@ struct __attribute__((packed)) ProtoState {
   uint16_t rawLadder;      // raw ADC on GPIO36, for diagnosing the selector
   char     peerName[24];   // connected BT device, empty if none
 
-  //  THE AUDIO ENGINE'S HEALTH, added 2026-09-01 because the author heard loud
-  //  pops on Bluetooth and there was no way to tell an underrun from an
+  //  THE AUDIO ENGINE'S HEALTH, added 2026-09-01 because of loud
+  //  pops heard on Bluetooth, and there was no way to tell an underrun from an
   //  analogue problem without a serial cable. An underrun zero-fills the rest
   //  of the block, which is a discontinuity, which is a click - so this is the
   //  first thing to look at when the audio misbehaves.
@@ -352,7 +352,7 @@ struct __attribute__((packed)) ProtoState {
   uint32_t stallMaxUs;     // the longest such gap
 
   //  THE VOLUME WATCH, added 2026-09-10 after the zero-data watch above came
-  //  back FLAT while the author was hearing pops. What the log did show was the
+  //  back FLAT while pops were being heard. What the log did show was the
   //  front knob's reading wandering 17..20 with nobody touching it, and the
   //  volume law is applied as a HARD STEP at a block boundary - so the question
   //  became "how far does that reading ever jump", and nothing in the machine

@@ -11,7 +11,7 @@
 
 // ============================================================================
 //  Everything about the MOTION came from an earlier test rig (now retired; see
-//  Firmware Gospel §5). Everything about the INDEX is new here - that rig had
+//  Firmware Gospel). Everything about the INDEX is new here - that rig had
 //  no homing scheme, only a detector.
 // ============================================================================
 
@@ -121,8 +121,8 @@ static int32_t  gDrift  = 0;
 //  frame is right again and gDrift describes history. Nothing cleared it, so
 //  captureLimit() refused a limit on a residual the machine had already acted
 //  on - and its advice, "re-home", regenerated the number on the post-home
-//  sweep. A guard whose remedy recreates its own trigger has no exit, and the
-//  author hit exactly that at the bench. THIS is the flag that means "still
+//  sweep. A guard whose remedy recreates its own trigger has no exit, and
+//  that is exactly what happened at the bench. THIS is the flag that means "still
 //  wrong": set only when a crossing was too far out to absorb.
 static bool     gDriftPending = false;
 
@@ -132,8 +132,8 @@ static bool     gDriftPending = false;
 //  HINT of much better quality than homing's usual one, which is the sign of a
 //  position we have just decided not to trust.
 //
-//  THE CLUE IS KEPT UNTIL A BETTER ONE REPLACES IT - the author's
-//  rule: never throw the clue away before a new one replaces it. It used to
+//  THE CLUE IS KEPT UNTIL A BETTER ONE REPLACES IT:
+//  never throw the clue away before a new one replaces it. It used to
 //  live only as long as gDriftPending did, and gDriftPending is cleared by
 //  beginReindex() the moment a re-index STARTS - so a re-index cut short by a
 //  stop (the OTA quiet, the console x, the portal button) left no clue at all,
@@ -169,7 +169,7 @@ static const uint8_t AUTO_TRIES_MAX = 3;
 
 //  PASSIVE RE-HOMING.
 //  The index is a mid-travel mark the needle crosses on almost every journey,
-//  and every crossing used to be MEASURED and thrown away. The author's point:
+//  and every crossing used to be MEASURED and thrown away. The point:
 //  if the sensor says where the needle actually is, believe it,
 //  and steps can never accumulate into an error. A small error is absorbed at
 //  the crossing; only a slip too large to absorb (or the routine idle check,
@@ -208,7 +208,7 @@ static const int32_t TRACK_DEADBAND_HS = 2;
 
 //  HUNTING DETECTION - the sense this machine did not have.
 //
-//  What found the wobble of 2026-09-10 was the author's eyes and the ULN2003's
+//  What found the wobble of 2026-09-10 was watching the ULN2003's
 //  LEDs. The telemetry said the needle was stationary and was not lying: `pos`
 //  is published in half-steps and both values it alternated between rounded to
 //  the same one. Nobody had looked at the
@@ -261,7 +261,7 @@ static uint32_t gCross  = 0;
 static uint32_t gMeas   = 0;
 
 //  The index sensor, S3_INDEX_HALL - the one Hall switch left; there are no
-//  end switches. Read as active LOW (the sensor and its pull-up: Bible §11).
+//  end switches. Read as active LOW (the sensor and its pull-up: Hardware Bible).
 static inline bool indexRaw() { return digitalRead(S3_INDEX_HALL) == LOW; }
 
 // ============================================================================
@@ -437,8 +437,8 @@ static void runProfile(float dt) {
   //  mechanism reads as mechanical. TRACKING issues a fresh move for every new
   //  target, so it paid the toll on each one: 100 ms tuning up and a full
   //  SECOND tuning down, which reads as the needle refusing to move until the
-  //  knob has travelled some distance. The author reported exactly that and
-  //  read it as a threshold; it is a timer.
+  //  knob has travelled some distance. This was reported exactly that way and
+  //  read as a threshold; it is a timer.
   uint16_t dwell = (st == TRACKING) ? 0 : (gDownLeg ? pDwellDn : pDwellUp);
   if (dwell && (int64_t)(esp_timer_get_time() - gMoveStartUs) < (int64_t)dwell * 1000) {
     gVel = 0.0f;
@@ -860,8 +860,8 @@ static bool readAs5600() {
   //  polled at 50 Hz - so tripping it needed 12 counts of 4096 inside 20 ms,
   //  about 53 degrees per second. Turn the knob slower than that and it never
   //  registered as tuning however far it went, so the Leditron never switched
-  //  to the readout. Turn it fast and it did. The author reported exactly that,
-  //  and noted the NEEDLE tracked the whole time - which is the proof:
+  //  to the readout. Turn it fast and it did. This was reported exactly that way,
+  //  noting the NEEDLE tracked the whole time - which is the proof:
   //  accAngle accumulates on every poll regardless of this test, so the angle
   //  was always right and only the motion DETECTOR was rate-gated.
   //
@@ -1013,7 +1013,7 @@ static bool     gTriedOther  = false;
 //  what "index never found in either direction" was on 2026-08-31: not a broken
 //  sensor, a search that began by pushing against a wall.
 //
-//  Under the author's policy the needle is ALWAYS at the low stop when the set
+//  By policy the needle is ALWAYS at the low stop when the set
 //  is off, so say so, and the first pass goes the right way.
 //  A DIRECTION HINT, NOT A POSITION. This makes gPos negative so startHoming()
 //  picks +1 as the search direction; nothing else may trust it. It is wrong by
@@ -1232,8 +1232,8 @@ static int8_t chooseHomeDir(int64_t posFine, int32_t hereHs) {
   return (posFine >= 0) ? -1 : +1;
 }
 
-//  REFUSES WHILE SOMETHING ELSE HOLDS THE NEEDLE, 2026-09-25 (author: make it
-//  resilient). startReindex() always had these two guards and this did not:
+//  REFUSES WHILE SOMETHING ELSE HOLDS THE NEEDLE, 2026-09-25 (resilience by
+//  design). startReindex() always had these two guards and this did not:
 //  H pressed during a band calibration disarmed the soft limits and unhomed
 //  the frame underneath a creep that was still running, and during a held
 //  coil test it set a homing state the needle task would not service - while
@@ -1392,7 +1392,7 @@ bool startReindex(bool routine) {
   return true;
 }
 
-//  A SLIP DURING THE SWEEP ENDS THE SWEEP AT ONCE. Author's ruling:
+//  A SLIP DURING THE SWEEP ENDS THE SWEEP AT ONCE:
 //  no 3 s wait for the dial to be still, no finishing the leg. The sweep drives
 //  to the soft limits, and the soft limits are positions in the frame the slip
 //  has just shown to be wrong - so every further half-step of it is a half-step
@@ -1697,7 +1697,7 @@ static void needleTask(void *) {
     if (st == SEEK_INDEX || st == BACKOFF || st == REAPPROACH) {
       homingTick();
     } else if (st == SWEEP) {
-      //  THE POWER-UP FLOURISH, author's spec: go to the low end, run to the
+      //  THE POWER-UP FLOURISH: go to the low end, run to the
       //  high end, then straight to the tuned position. No return trip - a real
       //  dial does not reverse twice before settling.
       //
@@ -1722,7 +1722,7 @@ static void needleTask(void *) {
         //  chase the last bit of encoder noise. Two half-steps is far narrower
         //  than the needle itself and is invisible on the glass; what it
         //  removes is AUDIBLE. It was first justified by encoder noise from the
-        //  AS5600's magnet (the magnet: Bible §11). The reason it stays at 2 -
+        //  AS5600's magnet (the magnet: Hardware Bible). The reason it stays at 2 -
         //  one audible profile per half-step - is not about the magnet. Change
         //  it only with a listening test.
         int32_t err = tgt - cur;
@@ -1840,7 +1840,7 @@ static void needleTask(void *) {
 
 // ============================================================================
 void begin() {
-  pinMode(S3_INDEX_HALL, INPUT);      // no internal pull-up: the pull-up is external (Bible §11)
+  pinMode(S3_INDEX_HALL, INPUT);      // no internal pull-up: the pull-up is external (Hardware Bible)
   //  SEED THE TRACKER WITH A LIVE READ, not the cold default of "OFF". Without
   //  this, a magnet already over the sensor at power-up (assumeAtLowStop()'s
   //  normal case is fine, but a set left parked ON the index is not
@@ -1852,7 +1852,7 @@ void begin() {
   idxConfirmed = idxRunLevel = indexRaw();
   Drive::begin();
   Drive::setInvert(true);             // MEASURED: advancing the phase goes LOW FM
-  Drive::setDutyPct(100);             // full duty for the motor supply in Bible §11
+  Drive::setDutyPct(100);             // full duty for the motor supply in Hardware Bible
   Drive::setMode(DRV_MICRO, pMicroFast);
 
   Wire.begin(S3_AS5600_SDA, S3_AS5600_SCL, S3_I2C_HZ);
@@ -1885,8 +1885,8 @@ bool homed() { return isHomed; }
 //  homed, which clobbered SWEEP - and the caller does exactly that: homing sets
 //  isHomed and st = SWEEP in the same breath, main.cpp fires applyNeedleMode()
 //  on the homed edge, and loop() runs far faster than the supervisor's 5 ms
-//  tick, so the sweep was overwritten before it was serviced once. The author
-//  saw "one trip to the low end, then straight to the station" and reported it
+//  tick, so the sweep was overwritten before it was serviced once. This looked like
+//  "one trip to the low end, then straight to the station" and was reported
 //  as the sweep stopping short. The SWEEP branch already ends with st = gAfter,
 //  so setting gAfter and leaving st alone is all that was ever needed.
 //
@@ -1933,7 +1933,7 @@ void setReapproachSpeed(uint16_t h)         { pReapHsps = h; }
 //  the TUNING CAPACITOR'S MECHANICAL TRAVEL directly, and never looked at a
 //  frequency at all. That is wrong whenever the two are not the same range,
 //  and on this set they are not: the tuner covers more than the printed face
-//  (Firmware Gospel §6). Every station therefore landed compressed and offset,
+//  (Firmware Gospel). Every station therefore landed compressed and offset,
 //  and the readout and the needle disagreed because they were computed from
 //  different things.
 //
@@ -1952,8 +1952,8 @@ void setReapproachSpeed(uint16_t h)         { pReapHsps = h; }
 //  target could only land on whole tenths of a MHz. On this dial that is 1570
 //  half-steps over 200 tenths, 7.85 half-steps per tenth. Leave the tuning near
 //  a x.x5 boundary and the encoder's own noise flips the rounding back and
-//  forth, hopping the needle eight half-steps each way indefinitely: the author
-//  saw it wobbling and the ULN2003's LEDs flashing while the firmware reported
+//  forth, hopping the needle eight half-steps each way indefinitely: it was
+//  seen wobbling and the ULN2003's LEDs flashing while the firmware reported
 //  a stationary position, because both values it alternated between rounded to
 //  the same reported half-step.
 //
@@ -2021,9 +2021,9 @@ void setGeometry(int32_t lo, int32_t hi) {
   //  is an invariant of any real machine, and a pair that fails it is proof
   //  the frame was shifted when they were captured.
   //
-  //  This is not theoretical: the author's stored pair was -1837..-117, BOTH
+  //  This is not theoretical: a stored pair was -1837..-117, BOTH
   //  negative, which puts the index outside the needle's own range. The
-  //  consequences were every symptom he reported - the needle could never
+  //  consequences were every symptom seen - the needle could never
   //  cross the index again, so passive re-referencing was structurally dead;
   //  and every trip to posMin drove it 640 half-steps into a hard stop.
   //  Refusing here is what stops a corrupt frame outliving the calibration.
@@ -2291,7 +2291,7 @@ uint32_t stepsEmitted(){ return gSteps; }
 float    velHsps()     { return fineToHsps(gVel); }
 
 // ============================================================================
-//  CALIBRATION  -  the author's 4-measurement band calibration, 2026-08-31
+//  CALIBRATION  -  the 4-measurement band calibration, 2026-08-31
 //
 //  THE PROPERTY THAT MAKES IT SAFE: the operator jogs the needle ONTO the
 //  sensor, and the machine only creeps across the index band from there, at
@@ -2331,7 +2331,7 @@ float    velHsps()     { return fineToHsps(gVel); }
 // ============================================================================
 
 //  ONE calibration, not three. The END-STOP calibration (stage 2 of the
-//  author's procedure: CAL_LOW / CAL_HIGH, keys g / G and two portal buttons)
+//  procedure: CAL_LOW / CAL_HIGH, keys g / G and two portal buttons)
 //  was REMOVED on 2026-09-03 because it checked nothing before it drove - not
 //  homed, not which side of the index, soft limits disarmed. Started from the
 //  wrong end it crept a 4000 half-step budget into the physical stop, then
@@ -2463,7 +2463,7 @@ static void calFinishBand() {
   //  setIndexCal(cfg.idx*, ...) and cfg.idx* is never written by anything.
   //  Meanwhile gPos KEPT the shift above, so the frame moved and the reference
   //  that justified the move was thrown away: every limit captured afterwards
-  //  was out by `shift`. That is the ~640 half-steps in the author's machine.
+  //  was out by `shift`. That is the ~640 half-steps in this machine.
   //  A FRAME SHIFT INVALIDATES PRIOR CROSSINGS, exactly as a re-home does.
   //  REAPPROACH and this function both establish a new frame and set isHomed
   //  (homeFault()'s failed-recovery branch also sets it, but hands back the

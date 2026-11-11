@@ -7,7 +7,7 @@
 //  keys typed at the portal first, then the USB port. So the dispatcher, the
 //  interactive prompts (clock, wifi) and every message work the same with or
 //  without a cable - and without a cable no PC ground is joined to the set's
-//  (Bible §10 and §21 for how the set is grounded and mains-referenced).
+//  (Hardware Bible for how the set is grounded and mains-referenced).
 //
 //  WHY A NEW OBJECT AND NOT A REDEFINED `Serial`: in this build `Serial` is
 //  already the core's object for the USB-JTAG port (HWCDC). Redefining it
